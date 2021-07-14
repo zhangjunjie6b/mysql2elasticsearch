@@ -1,0 +1,2 @@
+# mysql2elasticsearch
+一款带有WebGUI的elasticsearch数据同步小工具
