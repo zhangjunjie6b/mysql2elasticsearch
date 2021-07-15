@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <!-- 必须的 meta 标签 -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap 的 CSS 文件 -->
+    <link rel="stylesheet" href="/bootstrap-4.6.0-dist/css/bootstrap.min.css">
+
+    <title>{{.title}}</title>
+  </head>
+  <body>
+
+    <div class="container-sm">
+
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item active" aria-current="page">Home</li>
+      </ol>
+    </nav>
+
+     <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">配置名称</th>
+              <th scope="col">别名</th>
+              <th scope="col">索引名</th>
+              <th scope="col">uuid</th>
+              <th scope="col">索引分片数</th>
+              <th scope="col">索引副本数</th>
+              <th scope="col">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+          {{ range $k,$v := .jobList }}
+            <tr>
+              <th>{{$v.Name}}</th>
+              <td>{{$v.Config_index_name}}</td>
+              <td>{{$v.Index_name}}</td>
+              <th>{{$v.Uuid}}</th>
+              <td>{{$v.Number_of_shards}}</td>
+              <td>{{$v.Number_of_replicas}}</td>
+              <td><button type="button" class="btn btn-primary"  onclick='push("{{ $v.Name }}")' >推送数据</button></td>
+            </tr>
+          {{end}}
+          </tbody>
+        </table>
+    </div>
+
+
+    <script src="/bootstrap-4.6.0-dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/bootstrap-4.6.0-dist/jquery-3.6.0.min.js"></script>
+
+    <script>
+      function push(name) {
+        alert("推送中，求留意索引数据变化")
+        $.post('/push', { name: name }, function (text) {
+            console.log(text)
+            if (text.code != "200") {
+                alert(text.message)
+            } else {
+                alert("提交完成")
+            }
+
+        });
+
+      }
+　
+    </script>
+
+  </body>
+</html>

@@ -1,0 +1,5 @@
+{
+  "jobList" : [
+    {"name": "测试" , "filePath" : "example.json"},
+  ]
+}
