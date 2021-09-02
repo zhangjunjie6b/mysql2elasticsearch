@@ -8,6 +8,7 @@ import (
 	"github.com/olivere/elastic/v7"
 	"main/config"
 	"main/service"
+	"main/service/monitor"
 	"main/service/parse"
 	"strconv"
 	"sync"
@@ -21,7 +22,7 @@ type section struct {
 
 
 func BulkPushRun(esConfig service.EsConfig, name string,
-	conn config.Content, channel int,) error {
+	conn config.Content, channel int, configName string) error {
 
 	// 最小 最大 启动数 计算区间
 	var max,min int
@@ -38,11 +39,31 @@ func BulkPushRun(esConfig service.EsConfig, name string,
 
 	channelData := generate(max, min, channel)
 
+
+	channelWorkNumbers := (max-min)/conn.Writer.Parameter.BatchSize
+	monitor.ProgressBars[configName] = monitor.ProgressBar{Total: channelWorkNumbers, Progress: &sync.Map{}}
+	monitor.ProgressBars[configName].Progress.Store("number", -1)
+
+	//fmt.Printf("max:%s, min:%s, = : %s \n", max, min, channelWorkNumbers)
+
+
+
 	var wg = sync.WaitGroup{}
+
+
+/*	go func() {
+		for true {
+			a,_ := monitor.ProgressBars[name].Progress.Load("number")
+			fmt.Printf("【%s】total:%s, ing:%s \n",name,monitor.ProgressBars[name].Total, a)
+			time.Sleep(time.Second*10)
+		}
+
+	}()*/
 
 	for _,v := range channelData{
 		wg.Add(1)
-		go workProcess(v.Max, v.Min, conn, esConfig, name, &wg)
+		//fmt.Printf("最小:%s, 最大:%s \n",v.Min, v.Max)
+		go workProcess(v.Max, v.Min, conn, esConfig, name, &wg, configName)
 	}
 
 	wg.Wait()
@@ -59,7 +80,7 @@ func generate(max int, min int, channel int) map[int]section {
 	channelPip := make(map[int]section)
 	extent :=  (max - min) / channel
 
-	for i:=0; i <= channel; i++ {
+	for i:=1; i <= channel; i++ {
 		channelPip[i] = section{min,min + extent}
 		min = min + extent
 	}
@@ -72,6 +93,7 @@ func generate(max int, min int, channel int) map[int]section {
 func workProcess (max int , min int, conn config.Content,
 	esConfig service.EsConfig, name string,
 	wg *sync.WaitGroup,
+	configName string,
 	) (error) {
 
 	client := service.NewEsObj(esConfig)
@@ -102,9 +124,13 @@ func workProcess (max int , min int, conn config.Content,
 		return error
 	}
 
-	for i:=min ; i <= max; i = i + conn.Writer.Parameter.BatchSize {
+	for i:=min; i <= max; i = i + conn.Writer.Parameter.BatchSize {
+
+		a,_ := monitor.ProgressBars[configName].Progress.Load("number")
+		monitor.ProgressBars[configName].Progress.Store("number", a.(int)+1)
 
 		temp := conn.Writer.Parameter.BatchSize + i
+
 
 		if temp > max {
 			temp = max

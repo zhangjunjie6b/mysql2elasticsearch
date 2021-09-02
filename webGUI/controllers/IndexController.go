@@ -2,14 +2,21 @@ package controllers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
+	"log"
 	"main/config"
 	"main/service"
 	"main/service/errno"
+	"main/service/monitor"
 	"main/service/push"
+	"net/http"
+	"os"
+	"os/exec"
+	"time"
 )
-
 
 func Index(c *gin.Context)  {
 
@@ -45,7 +52,7 @@ func Index(c *gin.Context)  {
 	}
 
 	c.HTML(200, "index.tmpl", gin.H{
-		"title" : "包图网es推送service",
+		"title" : configFile.Title,
 		"jobList" : job,
 	})
 }
@@ -121,6 +128,7 @@ func Push(c *gin.Context)  {
 			synchronousConfig.Job.Content.Writer.Parameter.Index+ "_a",
 			synchronousConfig.Job.Content,
 			synchronousConfig.Job.Setting.Speed.Channel,
+			name,
 		)
 
 		if db_error != nil {
@@ -167,6 +175,7 @@ func Push(c *gin.Context)  {
 			new_index_suffix,
 			synchronousConfig.Job.Content,
 			synchronousConfig.Job.Setting.Speed.Channel,
+			name,
 			)
 		
 		if db_error != nil {
@@ -188,12 +197,95 @@ func Push(c *gin.Context)  {
 
 		client.DeleteIndex(now_index_suffix).Do(ctx)
 
-
+		monitor.ProgressBars[name].Progress.Delete("number")
+		delete(monitor.ProgressBars, name)
 
 		c.JSON(200, gin.H{
 			"code": 200,
 			"message": "ok",
 		})
 	}
+
+}
+
+func Progress(c *gin.Context)  {
+
+	var upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
+
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil) // 升级协议
+
+	defer conn.Close()
+
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	for {
+		messageType, message, err := conn.ReadMessage()
+
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		var  progressBarJson  []byte
+		var  IsClose = false
+		for {
+			progress,ok := monitor.ProgressBars[string(message[:])]
+
+			if ok == true {
+				progress,_ := progress.Progress.Load("number")
+
+				progressBarJson,_ = json.Marshal(monitor.ProgressBarJson{
+					Total: monitor.ProgressBars[string(message[:])].Total,
+					Progress: progress.(int),
+					Name: string(message[:]),
+					Status: 101,
+				})
+
+			} else {
+
+				progressBarJson,_ = json.Marshal(monitor.ProgressBarJson{
+					Name: string(message[:]),
+					Status: 200,
+				})
+
+				IsClose = true
+
+			}
+
+			if err := conn.WriteMessage(messageType, progressBarJson); err != nil {
+				log.Println(err)
+				return
+			}
+
+			if IsClose {
+				conn.Close()
+			}
+
+
+			time.Sleep(time.Second*1)
+		}
+
+
+	}
+
+}
+
+func Restart(c *gin.Context)  {
+
+	//todo 重新启动还要找其他的解决方法
+	str,_ :=os.Getwd()
+	fmt.Println(str)
+	s := exec.Command("bash", "-c", "kill `lsof -t -i:9100` && " + str +"/main")
+	output, _ := s.CombinedOutput()
+	fmt.Println(string(output))
 
 }

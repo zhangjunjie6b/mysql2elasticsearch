@@ -12,62 +12,61 @@
   </head>
   <body>
 
-    <div class="container-sm">
+    <div class="container">
 
-    <nav aria-label="breadcrumb">
-      <ol class="breadcrumb">
-        <li class="breadcrumb-item active" aria-current="page">Home</li>
-      </ol>
-    </nav>
+         <nav aria-label="breadcrumb">
+              <ol class="breadcrumb row">
+                <li class="breadcrumb-item active col-sm-9 col-md-9" aria-current="page">{{.title}}</li>
+                <li class="col-sm-3 col-md-3 col-sm-offset-9 col-md-offset-9">
+                        <!-- Place this tag where you want the button to render. -->
+                        <a class="github-button" href="https://github.com/zhangjunjie6b/mysql2elasticsearch" data-color-scheme="no-preference: light; light: light; dark: light;" data-size="large" data-show-count="true" aria-label="Star zhangjunjie6b/mysql2elasticsearch on GitHub">Star</a>
+                        <!-- Place this tag where you want the button to render. -->
+                        <a class="github-button" href="https://github.com/zhangjunjie6b/mysql2elasticsearch/issues" data-color-scheme="no-preference: light; light: light; dark: light;" data-icon="octicon-issue-opened" data-size="large" data-show-count="true" aria-label="Issue zhangjunjie6b/mysql2elasticsearch on GitHub">Issue</a>
+                </li>
+              </ol>
+        </nav>
+         <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">配置名称</th>
+                  <th scope="col">别名</th>
+                  <th scope="col">索引名</th>
+                  <th scope="col" class="col-2">进度</th>
+                  <th scope="col">索引分片数</th>
+                  <th scope="col">索引副本数</th>
+                  <th scope="col">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+              {{ range $k,$v := .jobList }}
+                <tr>
+                  <th>{{$v.Name}}</th>
+                  <td>{{$v.Config_index_name}}</td>
+                  <td>{{$v.Index_name}}</td>
+                  <td>
+                    <div class="progress">
+                          <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em;">
+                            0%
+                          </div>
+                     </div>
+                  </td>
+                  <td>{{$v.Number_of_shards}}</td>
+                  <td>{{$v.Number_of_replicas}}</td>
+                  <td><button type="button" class="btn btn-primary" disabled="disabled" onclick='push("{{ $v.Name }}", this)'>加载中</button></td>
+                </tr>
+              {{end}}
+              </tbody>
+            </table>
 
-     <table class="table">
-          <thead>
-            <tr>
-              <th scope="col">配置名称</th>
-              <th scope="col">别名</th>
-              <th scope="col">索引名</th>
-              <th scope="col">uuid</th>
-              <th scope="col">索引分片数</th>
-              <th scope="col">索引副本数</th>
-              <th scope="col">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-          {{ range $k,$v := .jobList }}
-            <tr>
-              <th>{{$v.Name}}</th>
-              <td>{{$v.Config_index_name}}</td>
-              <td>{{$v.Index_name}}</td>
-              <th>{{$v.Uuid}}</th>
-              <td>{{$v.Number_of_shards}}</td>
-              <td>{{$v.Number_of_replicas}}</td>
-              <td><button type="button" class="btn btn-primary"  onclick='push("{{ $v.Name }}")' >推送数据</button></td>
-            </tr>
-          {{end}}
-          </tbody>
-        </table>
     </div>
 
 
-    <script src="/bootstrap-4.6.0-dist/js/bootstrap.bundle.min.js"></script>
+
     <script src="/bootstrap-4.6.0-dist/jquery-3.6.0.min.js"></script>
-
-    <script>
-      function push(name) {
-        alert("推送中，求留意索引数据变化")
-        $.post('/push', { name: name }, function (text) {
-            console.log(text)
-            if (text.code != "200") {
-                alert(text.message)
-            } else {
-                alert("提交完成")
-            }
-
-        });
-
-      }
-　
-    </script>
+    <script src="/bootstrap-4.6.0-dist/js/websocket.js"></script>
+    <script src="/bootstrap-4.6.0-dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
 
   </body>
 </html>

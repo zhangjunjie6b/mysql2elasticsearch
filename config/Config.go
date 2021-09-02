@@ -6,6 +6,8 @@ import (
 )
 
 type Config struct {
+	Title string
+	Port int
 	JobList []JobList
 }
 

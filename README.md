@@ -2,10 +2,12 @@
  虽然 logstash dts 等工具提供了很好的多数据源同步订阅方案，但是实际项目中并不会把服务器的上机权限或云厂商账号开放给所有成员。
  这个小工具算对这类场景的一种补充,它可以帮助我们从mysql中取出数据并推送到elasticsearch上
 
+![16291791332153](http://pic.phpzjj.com/mweb/2021/08/17/16291791332153.jpg)
+
 # 特点
 
  * 基于 elasticsearch  REST APIs 理论无版本上的兼容问题
- * 配置简单仅需3步即可完成 1. 配置 mapping  2. 编写获取源数据sql语句 3. 对呀字段映射关系
+ * 配置简单仅需3步即可完成 1. 配置 mapping  2. 编写获取源数据sql语句 3. 对应字段映射关系
  * 提供WebGUI配置完成后日常维护无需上机
  
 
@@ -14,6 +16,7 @@
  下载对应平台运行，或源码编译安装
 
 MAC 
+
 ```
 # Linux
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build
@@ -108,14 +111,3 @@ filePath.json //单个配置文件
 
 
 ```
-
- 
-# 计划
-
- * 加入更多支持的数据关键字
- * 错误写日志
- * WebGUI 加入 push 时的进度条
- * 在线编辑配置文件
- * docker版
-
- 
