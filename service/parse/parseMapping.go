@@ -23,6 +23,7 @@ func TypeMapping(column string, columnMapping []config.Column) ( TypeMappingObj,
 	typeMapping["text"] = "string"
 	typeMapping["date"] = "string"
 	typeMapping["keyword"] = "string"
+	typeMapping["long"] = "int32"
 
 	for _,v := range columnMapping {
 
@@ -52,6 +53,9 @@ func StrConversion(types string, value string) (interface{}, error) {
 		case "int32":
 			v,_ := strconv.Atoi(value)
 			return  v , nil
+		case "long":
+			v,_ := strconv.Atoi(value)
+		return  v , nil
 		case "string":
 			return  value , nil
 	}
