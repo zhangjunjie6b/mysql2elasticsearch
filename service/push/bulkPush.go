@@ -11,6 +11,7 @@ import (
 	"main/service/monitor"
 	"main/service/parse"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -117,12 +118,12 @@ func workProcess (max int , min int, conn config.Content,
 		return error
 	}
 
-	stmtOut,error := db.Prepare(conn.Reader.Parameter.Connection.QuerySql)
+	//stmtOut,error := db.Prepare(conn.Reader.Parameter.Connection.QuerySql)
 
-	if error != nil {
+	/*if error != nil {
 		fmt.Println(error)
 		return error
-	}
+	}*/
 
 	for i:=min; i <= max; i = i + conn.Writer.Parameter.BatchSize {
 
@@ -137,7 +138,15 @@ func workProcess (max int , min int, conn config.Content,
 		}
 
 		//获取数据值和类型
-		rows, error := stmtOut.Query(i, temp)
+		start := time.Now()
+		//some func or operation
+
+		sqlQuery := strings.Replace(conn.Reader.Parameter.Connection.QuerySql, "?", strconv.Itoa(i), 1)
+		sqlQuery = strings.Replace(sqlQuery, "?", strconv.Itoa(temp), 1)
+		rows, error := db.Query(sqlQuery)
+
+		cost := time.Since(start)
+		fmt.Printf("[%d -%d] cost=[%s] \n",i,temp,cost)
 
 		if error != nil {
 			fmt.Println(error)
