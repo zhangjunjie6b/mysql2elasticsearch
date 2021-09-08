@@ -59,6 +59,7 @@ func Index(c *gin.Context)  {
 
 func Push(c *gin.Context)  {
 
+
 	name,err := c.GetPostForm("name")
 
 	//没post参数
@@ -170,6 +171,7 @@ func Push(c *gin.Context)  {
 			})
 			return
 		}
+
 		//3. 推送数据
 		db_error := push.BulkPushRun(esConfig,
 			new_index_suffix,
@@ -251,14 +253,13 @@ func Progress(c *gin.Context)  {
 				})
 
 			} else {
+				    push.BulkPushRunWg.Wait() //等待运行中的协成
+					progressBarJson, _ = json.Marshal(monitor.ProgressBarJson{
+						Name:   string(message[:]),
+						Status: 200,
+					})
 
-				progressBarJson,_ = json.Marshal(monitor.ProgressBarJson{
-					Name: string(message[:]),
-					Status: 200,
-				})
-
-				IsClose = true
-
+					IsClose = true
 			}
 
 			if err := conn.WriteMessage(messageType, progressBarJson); err != nil {
@@ -267,11 +268,11 @@ func Progress(c *gin.Context)  {
 			}
 
 			if IsClose {
+				time.Sleep(time.Second*60)
 				conn.Close()
 			}
 
-
-			time.Sleep(time.Second*1)
+			time.Sleep(time.Second*2)
 		}
 
 
