@@ -20,11 +20,11 @@ type section struct {
 	Min int
 	Max int
 }
+var BulkPushRunWg = sync.WaitGroup{}
 
 
 func BulkPushRun(esConfig service.EsConfig, name string,
 	conn config.Content, channel int, configName string) error {
-
 	// 最小 最大 启动数 计算区间
 	var max,min int
 
@@ -48,10 +48,6 @@ func BulkPushRun(esConfig service.EsConfig, name string,
 	//fmt.Printf("max:%s, min:%s, = : %s \n", max, min, channelWorkNumbers)
 
 
-
-	var wg = sync.WaitGroup{}
-
-
 /*	go func() {
 		for true {
 			a,_ := monitor.ProgressBars[name].Progress.Load("number")
@@ -62,12 +58,12 @@ func BulkPushRun(esConfig service.EsConfig, name string,
 	}()*/
 
 	for _,v := range channelData{
-		wg.Add(1)
+		BulkPushRunWg.Add(1)
 		//fmt.Printf("最小:%s, 最大:%s \n",v.Min, v.Max)
-		go workProcess(v.Max, v.Min, conn, esConfig, name, &wg, configName)
+		go workProcess(v.Max, v.Min, conn, esConfig, name, &BulkPushRunWg, configName)
 	}
 
-	wg.Wait()
+	BulkPushRunWg.Wait()
 
 	return nil
 }
@@ -93,7 +89,7 @@ func generate(max int, min int, channel int) map[int]section {
  */
 func workProcess (max int , min int, conn config.Content,
 	esConfig service.EsConfig, name string,
-	wg *sync.WaitGroup,
+	BulkPushRunWg *sync.WaitGroup,
 	configName string,
 	) (error) {
 
@@ -222,7 +218,7 @@ func workProcess (max int , min int, conn config.Content,
 	}
 
 	defer func() {
-		wg.Done()
+		BulkPushRunWg.Done()
 		p.Close()
 		db.Close()
 	}()
