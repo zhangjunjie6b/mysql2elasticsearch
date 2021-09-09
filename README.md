@@ -4,16 +4,16 @@
 
 ![16291791332153](http://pic.phpzjj.com/mweb/2021/08/17/16291791332153.jpg)
 
-#流程
-
-![img.png](https://pic.phpzjj.com/go/image/2021/9/9/a83e2ecc-a3da-4499-bd69-fa712c068e50.jpeg)
-
 # 特点
 
  * 基于 elasticsearch  REST APIs 理论无版本上的兼容问题
  * 配置简单仅需3步即可完成 1. 配置 mapping  2. 编写获取源数据sql语句 3. 对应字段映射关系
  * 提供WebGUI配置完成后日常维护无需上机
- 
+
+# 流程
+
+![img.png](https://pic.phpzjj.com/go/image/2021/9/9/a83e2ecc-a3da-4499-bd69-fa712c068e50.jpeg)
+
 
 # 安装
 
