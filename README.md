@@ -20,7 +20,7 @@
 Docker
 
 ```
-docker run -p 9102:9102  -v /config/:/root/bin/config  zhangjunjie6b/mysql2elasticsearch
+docker run -p 9102:9102  -v /config/:/root/bin/config  registry.cn-shanghai.aliyuncs.com/zhangjunjie6b/mysql2elasticsearch:[镜像版本号]
 ```
 
  下载对应平台运行，或源码编译安装
