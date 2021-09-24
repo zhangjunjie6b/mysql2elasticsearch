@@ -14,6 +14,7 @@ var (
 	PushCreateIndex = &Erron{Code: 1004} //首次创建索引失败
 	PushError = &Erron{Code: 1005} //正式推送中的错误
 	//sys
+	SysConfigNotFind = "配置文件未找到"
 	SysAliasExceedLimit = "别名下存在多个Index"
 	SysIndexAliasExceedLimit = "Index下包含多个别名"
 	SysIndexNameStandardLimit = "Index命名非下划线A或者B"

@@ -1,8 +1,0 @@
-{
-  "title" : "es推送工具",
-  "port" : 9002,
-  "jobList" : [
-    {"name": "测试" , "filePath" : "a.json"},
-    {"name": "测试1" , "filePath" : "b.json"}
-  ]
-}
