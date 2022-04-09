@@ -14,7 +14,7 @@ type TypeMappingObj struct {
 }
 
 
-func TypeMapping(column string, columnMapping []config.Column) ( TypeMappingObj, error) {
+func TypeMapping(column string, columnMapping []configs.Column) ( TypeMappingObj, error) {
 
 	var typeMapping = map[string]string{}
 

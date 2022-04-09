@@ -1,9 +1,9 @@
 package main
 
 import (
-	"main/webGUI"
+	"main/web"
 )
 
 func main() {
-	webGUI.Start()
+	web.Start()
 }

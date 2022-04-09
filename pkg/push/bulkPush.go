@@ -24,7 +24,7 @@ type section struct {
 var BulkPushRunWg = sync.WaitGroup{}
 
 func BulkPushRun(esConfig service.EsConfig, name string,
-	conn config.Content, channel int, configName string) error {
+	conn configs.Content, channel int, configName string) error {
 	// 最小 最大 启动数 计算区间
 	var max, min int
 
@@ -84,7 +84,7 @@ func generate(max int, min int, channel int) map[int]section {
 /**
 协成分发任务
 */
-func workProcess(max int, min int, conn config.Content,
+func workProcess(max int, min int, conn configs.Content,
 	esConfig service.EsConfig, name string,
 	BulkPushRunWg *sync.WaitGroup,
 	configName string,
