@@ -1,8 +1,6 @@
 package main
 
-import (
-	"main/web"
-)
+import "main/web"
 
 func main() {
 	web.Start()
