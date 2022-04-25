@@ -21,7 +21,7 @@
           "parameter": {
             "endpoint": "http://192.168.193.35:9200",
             "accessId": "elastic",
-            "accessKey": "password",
+            "accessKey": "526353781",
             "index": "t1",
             "type": "_doc",
             "batchSize": 10000,

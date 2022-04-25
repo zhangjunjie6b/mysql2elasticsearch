@@ -1,9 +1,9 @@
-package config
+package configs
 
 import (
 	"fmt"
 	"github.com/spf13/viper"
-	"main/service"
+	"main/pkg"
 )
 
 type SynchronousConfig struct {
@@ -85,7 +85,7 @@ func NewSynchronousConfig(configName string)  SynchronousConfig {
 	config := viper.New()
 	config.SetConfigName(configName)
 	config.SetConfigType("json")
-	config.AddConfigPath("./config")
+	config.AddConfigPath("../../configs")
 
 	err := config.ReadInConfig()
 
@@ -102,8 +102,8 @@ func GetMysqlConfig(job Job) string {
 	return job.Content.Reader.Parameter.Username + ":" + job.Content.Reader.Parameter.Password  + "@tcp(" + job.Content.Reader.Parameter.Host+ ")/" + job.Content.Reader.Parameter.DbName
 }
 
-func GetEsConfig(job Job)  service.EsConfig {
-	return service.EsConfig{
+func GetEsConfig(job Job)  pkg.EsConfig {
+	return pkg.EsConfig{
 		Addresses:             job.Content.Writer.Parameter.Endpoint,
 		Username:              job.Content.Writer.Parameter.AccessId,
 		Password:              job.Content.Writer.Parameter.AccessKey,
@@ -130,12 +130,12 @@ func JobNameGetSynchronousConfig(jobName string) (SynchronousConfig, bool) {
 /**
 	根据顶层配置文件  配置名称 返回 es 配置信息
  */
-func JobNameGetESConfig(jobName string) (service.EsConfig, SynchronousConfig , bool) {
+func JobNameGetESConfig(jobName string) (pkg.EsConfig, SynchronousConfig , bool) {
 
 	synchronousConfig, status := JobNameGetSynchronousConfig(jobName)
 
 	if status == false {
-		return service.EsConfig{}, synchronousConfig , false
+		return pkg.EsConfig{}, synchronousConfig , false
 	}
 
 	return GetEsConfig(synchronousConfig.Job), synchronousConfig, true

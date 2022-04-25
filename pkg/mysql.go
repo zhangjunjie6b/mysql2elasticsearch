@@ -1,4 +1,4 @@
-package service
+package pkg
 
 import (
 	"database/sql"
@@ -7,7 +7,6 @@ import (
 
 
 func  NewMysqlObj(dataSourceName string) (*sql.DB,error) {
-
 	 client,err := sql.Open("mysql", dataSourceName)
 	 return  client,err
 }

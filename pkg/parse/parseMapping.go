@@ -2,8 +2,8 @@ package parse
 
 import (
 	"fmt"
-	"main/config"
-	"main/service/errno"
+	"main/configs"
+	"main/pkg/errno"
 	"strconv"
 )
 
@@ -55,7 +55,7 @@ func StrConversion(types string, value string) (interface{}, error) {
 			return  v , nil
 		case "long":
 			v,_ := strconv.Atoi(value)
-		return  v , nil
+			return  v , nil
 		case "string":
 			return  value , nil
 	}
