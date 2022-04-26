@@ -2,11 +2,12 @@ package monitor
 
 import "sync"
 
-var ProgressBars  = map[string]ProgressBar{}
+var ProgressBars  = map[string]*ProgressBar{}
 
 type ProgressBar struct {
 	Total int
-	Progress *sync.Map
+	Progress int
+	M sync.Mutex
 }
 
 type ProgressBarJson struct {

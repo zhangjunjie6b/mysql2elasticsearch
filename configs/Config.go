@@ -1,10 +1,10 @@
-package config
+package configs
 
 import (
 	"fmt"
 	"github.com/spf13/viper"
-	"main/service"
-	"main/service/errno"
+	"main/pkg"
+	"main/pkg/errno"
 	"time"
 )
 
@@ -20,18 +20,25 @@ type JobList struct {
 }
 
 func NewConfig () Config{
+	var  errNumber int = 0
 	Loop:
 	config := viper.New()
 	config.SetConfigName("config.json")
 	config.SetConfigType("json")
-	config.AddConfigPath("./config")
+	config.AddConfigPath("../../configs")
 	err := config.ReadInConfig()
 
 	if err != nil {
+		errNumber ++
 		fmt.Println(errno.SysConfigNotFind)
 		fmt.Println("正在生成默认配置文件")
 		makeDefaultConfig()
-		time.Sleep( 15 * time.Second)
+		time.Sleep( 5 * time.Second)
+
+		if errNumber >3 {
+			panic("配置文件检查出错")
+		}
+
 		goto Loop
 	}
 
@@ -41,6 +48,6 @@ func NewConfig () Config{
 }
 
 func makeDefaultConfig()  {
-	service.CopyFile("./config/config.json", "./webGUI/default/config/config.json")
-	service.CopyFile("./config/example.json", "./webGUI/default/config/example.json")
+	pkg.CopyFile("../../configs/config.json", "../../web/default/config/config.json")
+	pkg.CopyFile("../../configs/example.json", "../../web/default/config/example.json")
 }

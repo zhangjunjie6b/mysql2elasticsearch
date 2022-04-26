@@ -1,4 +1,4 @@
-package service
+package pkg
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/olivere/elastic/v7"
-	"main/service/errno"
+	"main/pkg/errno"
 	"strings"
 )
 
@@ -53,7 +53,7 @@ func NewEsObj(config EsConfig) *elastic.Client {
 }
 
 
-func GetIndexInfo(client *elastic.Client, ctx context.Context, name string) SettingsIndexInfo {
+func GetIndexInfo(ctx context.Context, client *elastic.Client, name string) SettingsIndexInfo {
 
 	info,err := client.IndexGet(name).Do(ctx)
 
@@ -101,7 +101,7 @@ func GetIndexInfo(client *elastic.Client, ctx context.Context, name string) Sett
 		PlanIndexA&PlanIndexB  为true   表示程序正在运行
 
  */
-func GetIndexStatus(client *elastic.Client, ctx context.Context, name string) (IndexStatus, error) {
+func GetIndexStatus( ctx context.Context, client *elastic.Client, name string) (IndexStatus, error) {
 
 	var state =  IndexStatus{IndexName: name, AliaseName: "", PlanIndexA: false, PlanIndexB: false}
 
@@ -112,7 +112,7 @@ func GetIndexStatus(client *elastic.Client, ctx context.Context, name string) (I
 		return state,nil
 	}
 
-	info := GetIndexInfo(client, ctx, name)
+	info := GetIndexInfo(ctx, client, name)
 
 	if len(info.AliaseName) > 1 {
 		//todo 别名暂时只支持自身维护，多别名场景尚未涉及

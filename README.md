@@ -15,6 +15,15 @@
 ![img.png](https://pic.phpzjj.com/go/image/2021/9/9/a83e2ecc-a3da-4499-bd69-fa712c068e50.jpeg)
 
 
+# 更新历史
+
+版本|更新内容
+:-:|:-:
+v1.0|实现基础功能
+v2.0|调整项目目录结构&&修复进度条准确性
+
+
+
 # 安装
 
 Docker

@@ -7,11 +7,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"log"
-	"main/config"
-	"main/service"
-	"main/service/errno"
-	"main/service/monitor"
-	"main/service/push"
+	"main/configs"
+	"main/pkg"
+	"main/pkg/errno"
+	"main/pkg/monitor"
+	"main/pkg/push"
 	"net/http"
 	"os"
 	"os/exec"
@@ -20,22 +20,24 @@ import (
 
 func Index(c *gin.Context) {
 
-	configFile := config.NewConfig()
+	configFile := configs.NewConfig()
 
 	job := []map[string]string{}
 
+	ctx := context.Background()
+	defer ctx.Done()
+
 	for _, v := range configFile.JobList {
-		NewSynchronousConfig := config.NewSynchronousConfig(v.FilePath)
-		esCofig := config.GetEsConfig(NewSynchronousConfig.Job)
-		client := service.NewEsObj(esCofig)
-		ctx := context.Background()
+		NewSynchronousConfig := configs.NewSynchronousConfig(v.FilePath)
+		esCofig := configs.GetEsConfig(NewSynchronousConfig.Job)
+		client := pkg.NewEsObj(esCofig)
 
 		exists, _ := client.IndexExists(NewSynchronousConfig.Job.Content.Writer.Parameter.Index).Do(ctx)
 
-		indexInfo := service.SettingsIndexInfo{Uuid: "未创建", Number_of_replicas: "0", Number_of_shards: "0"}
+		indexInfo := pkg.SettingsIndexInfo{Uuid: "未创建", Number_of_replicas: "0", Number_of_shards: "0"}
 
 		if exists {
-			indexInfo = service.GetIndexInfo(client, ctx, NewSynchronousConfig.Job.Content.Writer.Parameter.Index)
+			indexInfo = pkg.GetIndexInfo(ctx, client, NewSynchronousConfig.Job.Content.Writer.Parameter.Index)
 		}
 
 		job = append(job, map[string]string{
@@ -68,7 +70,7 @@ func Push(c *gin.Context) {
 		return
 	}
 
-	esConfig, synchronousConfig, err := config.JobNameGetESConfig(name)
+	esConfig, synchronousConfig, err := configs.JobNameGetESConfig(name)
 
 	//没对应配置文件
 	if err == false {
@@ -79,12 +81,12 @@ func Push(c *gin.Context) {
 		return
 	}
 
-	client := service.NewEsObj(esConfig)
+	client := pkg.NewEsObj(esConfig)
 	ctx := context.Background()
-
+	defer ctx.Done()
 	//Index当前状态
-	state, state_err := service.GetIndexStatus(client,
-		ctx,
+	state, state_err := pkg.GetIndexStatus(ctx,
+		client,
 		synchronousConfig.Job.Content.Writer.Parameter.Index)
 
 	if state_err != nil {
@@ -192,16 +194,15 @@ func Push(c *gin.Context) {
 			synchronousConfig.Job.Content.Writer.Parameter.Index).Do(ctx)
 
 		//5. 删除老index
-		monitor.ProgressBars[name].Progress.Delete("number")
-		delete(monitor.ProgressBars, name)
-
 		client.DeleteIndex(now_index_suffix).Do(ctx)
-
-		c.JSON(200, gin.H{
-			"code":    200,
-			"message": "ok",
-		})
 	}
+
+	//6. 删除精度条信息回复响应
+	delete(monitor.ProgressBars, name)
+	c.JSON(200, gin.H{
+		"code":    200,
+		"message": "ok",
+	})
 
 }
 
@@ -238,11 +239,11 @@ func Progress(c *gin.Context) {
 			progress, ok := monitor.ProgressBars[string(message[:])]
 
 			if ok == true {
-				progress, _ := progress.Progress.Load("number")
+				progress := progress.Progress
 
 				progressBarJson, _ = json.Marshal(monitor.ProgressBarJson{
 					Total:    monitor.ProgressBars[string(message[:])].Total,
-					Progress: progress.(int),
+					Progress: progress,
 					Name:     string(message[:]),
 					Status:   101,
 				})

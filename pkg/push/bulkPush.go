@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"github.com/Jeffail/gabs/v2"
 	"github.com/olivere/elastic/v7"
-	"main/config"
-	"main/service"
-	"main/service/monitor"
-	"main/service/parse"
+	"main/configs"
+	"main/pkg"
+	"main/pkg/monitor"
+	"main/pkg/parse"
 	"strconv"
 	"strings"
 	"sync"
@@ -23,12 +23,12 @@ type section struct {
 
 var BulkPushRunWg = sync.WaitGroup{}
 
-func BulkPushRun(esConfig service.EsConfig, name string,
-	conn config.Content, channel int, configName string) error {
+func BulkPushRun(esConfig pkg.EsConfig, name string,
+	conn configs.Content, channel int, configName string) error {
 	// 最小 最大 启动数 计算区间
 	var max, min int
 
-	db, error := service.NewMysqlObj(conn.Reader.Parameter.Connection.JdbcUrl)
+	db, error := pkg.NewMysqlObj(conn.Reader.Parameter.Connection.JdbcUrl)
 
 	if error != nil {
 		return error
@@ -41,19 +41,8 @@ func BulkPushRun(esConfig service.EsConfig, name string,
 	channelData := generate(max, min, channel)
 
 	channelWorkNumbers := (max - min) / conn.Writer.Parameter.BatchSize
-	monitor.ProgressBars[configName] = monitor.ProgressBar{Total: channelWorkNumbers, Progress: &sync.Map{}}
-	monitor.ProgressBars[configName].Progress.Store("number", -1)
+	monitor.ProgressBars[configName] = &monitor.ProgressBar{Total: channelWorkNumbers, Progress: 0}
 
-	//fmt.Printf("max:%s, min:%s, = : %s \n", max, min, channelWorkNumbers)
-
-	/*	go func() {
-		for true {
-			a,_ := monitor.ProgressBars[name].Progress.Load("number")
-			fmt.Printf("【%s】total:%s, ing:%s \n",name,monitor.ProgressBars[name].Total, a)
-			time.Sleep(time.Second*10)
-		}
-
-	}()*/
 
 	for _, v := range channelData {
 		BulkPushRunWg.Add(1)
@@ -72,7 +61,7 @@ func BulkPushRun(esConfig service.EsConfig, name string,
 func generate(max int, min int, channel int) map[int]section {
 
 	channelPip := make(map[int]section)
-	extent := (max - min) / channel
+	extent := ((max - min) / channel) +1
 
 	for i := 1; i <= channel; i++ {
 		channelPip[i] = section{min, min + extent}
@@ -84,13 +73,13 @@ func generate(max int, min int, channel int) map[int]section {
 /**
 协成分发任务
 */
-func workProcess(max int, min int, conn config.Content,
-	esConfig service.EsConfig, name string,
+func workProcess(max int, min int, conn configs.Content,
+	esConfig pkg.EsConfig, name string,
 	BulkPushRunWg *sync.WaitGroup,
 	configName string,
 ) error {
 
-	client := service.NewEsObj(esConfig)
+	client := pkg.NewEsObj(esConfig)
 
 	var p *elastic.BulkProcessor
 	var error error
@@ -105,7 +94,7 @@ func workProcess(max int, min int, conn config.Content,
 
 		if error != nil {
 			if timesCount > 6 {
-				panic(error)
+				panic(error) // 需要人工介入直接挂服务
 			}
 			time.Sleep(time.Second * 10)
 			timesCount++
@@ -114,7 +103,7 @@ func workProcess(max int, min int, conn config.Content,
 		}
 	}
 
-	db, error := service.NewMysqlObj(conn.Reader.Parameter.Connection.JdbcUrl)
+	db, error := pkg.NewMysqlObj(conn.Reader.Parameter.Connection.JdbcUrl)
 
 	if error != nil {
 		fmt.Println(error)
@@ -123,8 +112,12 @@ func workProcess(max int, min int, conn config.Content,
 
 	for i := min; i <= max; i = i + conn.Writer.Parameter.BatchSize {
 
-		a, _ := monitor.ProgressBars[configName].Progress.Load("number")
-		monitor.ProgressBars[configName].Progress.Store("number", a.(int)+1)
+
+	    monitor.ProgressBars[configName].M.Lock()
+
+		monitor.ProgressBars[configName].Progress += 1
+
+		monitor.ProgressBars[configName].M.Unlock()
 
 		temp := conn.Writer.Parameter.BatchSize + i
 
