@@ -7,7 +7,7 @@ var ProgressBars  = map[string]*ProgressBar{}
 type ProgressBar struct {
 	Total int
 	Progress int
-	M *sync.Mutex
+	M sync.Mutex
 }
 
 type ProgressBarJson struct {

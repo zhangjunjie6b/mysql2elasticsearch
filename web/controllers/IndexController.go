@@ -194,15 +194,15 @@ func Push(c *gin.Context) {
 			synchronousConfig.Job.Content.Writer.Parameter.Index).Do(ctx)
 
 		//5. 删除老index
-		delete(monitor.ProgressBars, name)
-
 		client.DeleteIndex(now_index_suffix).Do(ctx)
-
-		c.JSON(200, gin.H{
-			"code":    200,
-			"message": "ok",
-		})
 	}
+
+	//6. 删除精度条信息回复响应
+	delete(monitor.ProgressBars, name)
+	c.JSON(200, gin.H{
+		"code":    200,
+		"message": "ok",
+	})
 
 }
 
