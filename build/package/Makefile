@@ -11,8 +11,9 @@ endef
 
 main: ../../cmd/web/main.go
 	${initdir}
-	@go build  -o ./bin/cmd/web/main ../../cmd/web/main.go
+	@go build  -o ./bin/cmd/web/main_macos ../../cmd/web/main.go
 	@GOOS=linux GOARCH=amd64 go build  -o ./bin/cmd/web/main_linux64 ../../cmd/web/main.go
+	@CGO_ENABLED=0 GOOS=windows GOARCH=amd64  go build -o ./bin/cmd/web/main.exe  ../../cmd/web/main.go
 
 .PHONY: image
 image :
