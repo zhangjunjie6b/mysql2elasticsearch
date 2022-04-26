@@ -20,5 +20,3 @@ vendor/
 .DS_Store
 #IDE
 .idea
-
-/config/a.json

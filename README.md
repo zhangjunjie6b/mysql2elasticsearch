@@ -29,7 +29,7 @@ v2.0|调整项目目录结构&&修复进度条准确性
 Docker
 
 ```
-docker run -p 9102:9102  -v /config/:/root/bin/config  registry.cn-shanghai.aliyuncs.com/zhangjunjie6b/mysql2elasticsearch:[镜像版本号]
+docker run -p 9102:9102  -v /config/:/root/bin/configs  registry.cn-shanghai.aliyuncs.com/zhangjunjie6b/mysql2elasticsearch:last
 ```
 
  下载对应平台运行，或源码编译安装
