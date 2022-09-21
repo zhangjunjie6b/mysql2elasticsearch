@@ -32,7 +32,17 @@ Docker
 docker run -p 9102:9102  -v /config/:/root/bin/configs  registry.cn-shanghai.aliyuncs.com/zhangjunjie6b/mysql2elasticsearch:last
 ```
 
- 下载对应平台运行，或源码编译安装
+下载对应平台运行，或源码编译安装
+
+快速生成当前环境执行文件（推荐）
+
+```
+  cd /build/package/
+  make
+```
+
+/build/package/bin 为编译目录
+/build/package/bin/cmd/web/ 执行文件目录
 
 MAC 
 
