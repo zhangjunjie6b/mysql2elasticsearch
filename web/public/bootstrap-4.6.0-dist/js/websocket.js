@@ -40,6 +40,17 @@ $(function(){
 function push(name, t) {
     $(t).attr('disabled', 'disabled')
     $(t).html("推送中")
+
+
+    $.post('/push', { name: name }, function (text) {
+
+        if (text.code != "200") {
+            alert(text.message)
+        }
+
+    });
+
+
     setTimeout(function (name, t) {
         var ws = new WebSocket("ws://"+host+"/progress");
         ws.onopen = function(evt) {
@@ -65,14 +76,6 @@ function push(name, t) {
         ws.onclose = function(evt) {
             console.log("Connection closed.");
         };
-    },5000, name, t);
-    $.post('/push', { name: name }, function (text) {
-
-        if (text.code != "200") {
-            alert(text.message)
-        }
-
-    });
-
+    },20000, name, t);
 
 }

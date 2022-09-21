@@ -1,64 +1,85 @@
 package parse
 
 import (
-	"fmt"
+	"github.com/stretchr/testify/assert"
 	"main/configs"
-	"main/internal/pkg/errno"
-	"strconv"
+	"testing"
 )
 
-//https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-types.html
-type TypeMappingObj struct {
-	IsID bool
-	Mold string
-}
-
-
-func TypeMapping(column string, columnMapping []configs.Column) (TypeMappingObj, error) {
-
-	var typeMapping = map[string]string{}
-
-	typeMapping["id"]   =  "int32"
-	typeMapping["integer"] = "int32"
-	typeMapping["text"] = "string"
-	typeMapping["date"] = "string"
-	typeMapping["keyword"] = "string"
-	typeMapping["long"] = "int32"
-
-	for _,v := range columnMapping {
-
-		if (v.Name == column) {
-
-			 isID := false
-
-			if column == "id" {
-				isID = true
-			}
-
-			return TypeMappingObj{
-				IsID: isID,
-				Mold: typeMapping[v.Type],
-			}, nil
-			
-		}
-
-	}
-	//SysTypeUndefined
-	return TypeMappingObj{}, fmt.Errorf("[%s]:%s", column, errno.SysTypeUndefined)
-}
-
-func StrConversion(types string, value string) (interface{}, error) {
-
-	switch types {
-		case "int32":
-			v,_ := strconv.Atoi(value)
-			return  v , nil
-		case "long":
-			v,_ := strconv.Atoi(value)
-			return  v , nil
-		case "string":
-			return  value , nil
+func TestTypeMapping(t *testing.T) {
+	type list struct {
+		Column []configs.Column
+		TestValue string
+		Assert TypeMappingObj
 	}
 
-	return "", fmt.Errorf("[%s]:%s", value, errno.SysTypeUndefined)
+	configColumn := []configs.Column{
+		{Name: "id", Type: "id"},
+		{Name: "pic_id", Type: "integer"},
+		{Name: "keyword", Type: "text"},
+		{Name: "name", Type: "keyword"},
+		{Name: "uid", Type: "long"},
+		{Name: "id-2", Type: "id"},
+	}
+
+	 l := []list{
+	 	{
+			Column: configColumn,
+			TestValue : "id",
+	 		Assert: TypeMappingObj{true, "int32"},
+	 	},
+		 {
+			 Column: configColumn,
+			 TestValue : "pic_id",
+			 Assert: TypeMappingObj{false, "int32"},
+		 },
+		 {
+			 Column: configColumn,
+			 TestValue : "keyword",
+			 Assert: TypeMappingObj{false, "string"},
+		 },
+		 {
+			 Column: configColumn,
+			 TestValue : "name",
+			 Assert: TypeMappingObj{false, "string"},
+		 },
+		 {
+			 Column: configColumn,
+			 TestValue : "uid",
+			 Assert: TypeMappingObj{false, "int32"},
+		 },
+		 {
+			 Column: configColumn,
+			 TestValue : "id-2",
+			 Assert: TypeMappingObj{true, "int32"},
+		 },
+	 }
+
+	assert := assert.New(t)
+	for _,v := range l {
+		mapping,_ :=TypeMapping(v.TestValue, v.Column)
+		assert.Equal( v.Assert, mapping, v.TestValue)
+	}
+
+	_,err := TypeMapping("err", []configs.Column{{Name: "err", Type: "err"}})
+	assert.Error(err, "column undefined")
+}
+
+func TestStrConversion(t *testing.T) {
+	value,err := StrConversion("int32", "18")
+	assert.NoError(t, err)
+	assert.Equal(t, value, 18)
+
+	value,err = StrConversion("long", "18")
+	assert.NoError(t, err)
+	assert.Equal(t, value, 18)
+
+	value,err = StrConversion("string", "18")
+	assert.NoError(t, err)
+	assert.Equal(t, value, "18")
+
+	value,err = StrConversion("bool", "true")
+	assert.Error(t, err)
+	assert.Empty(t, value, value)
+
 }

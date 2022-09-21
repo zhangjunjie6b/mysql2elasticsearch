@@ -1,43 +1,40 @@
 package controllers
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"gorm.io/driver/mysql"
 	"log"
 	"main/configs"
-	"main/pkg"
-	"main/pkg/errno"
-	"main/pkg/monitor"
-	"main/pkg/push"
+	"main/internal/dao"
+	"main/internal/pkg"
+	"main/internal/pkg/errno"
+	"main/internal/pkg/monitor"
+	"main/internal/service"
 	"net/http"
-	"os"
-	"os/exec"
 	"time"
 )
 
 func Index(c *gin.Context) {
 
 	configFile := configs.NewConfig()
-
 	job := []map[string]string{}
-
-	ctx := context.Background()
-	defer ctx.Done()
 
 	for _, v := range configFile.JobList {
 		NewSynchronousConfig := configs.NewSynchronousConfig(v.FilePath)
 		esCofig := configs.GetEsConfig(NewSynchronousConfig.Job)
-		client := pkg.NewEsObj(esCofig)
 
-		exists, _ := client.IndexExists(NewSynchronousConfig.Job.Content.Writer.Parameter.Index).Do(ctx)
+		es := pkg.ES{}
+		client,_ := es.NewEsObj(esCofig)
+
+		exists, _ := client.IndexExists(NewSynchronousConfig.Job.Content.Writer.Parameter.Index).Do(es.Ctx)
 
 		indexInfo := pkg.SettingsIndexInfo{Uuid: "未创建", Number_of_replicas: "0", Number_of_shards: "0"}
 
 		if exists {
-			indexInfo = pkg.GetIndexInfo(ctx, client, NewSynchronousConfig.Job.Content.Writer.Parameter.Index)
+			indexInfo,_ = es.GetIndexInfo(NewSynchronousConfig.Job.Content.Writer.Parameter.Index)
 		}
 
 		job = append(job, map[string]string{
@@ -80,21 +77,23 @@ func Push(c *gin.Context) {
 		})
 		return
 	}
+	es := pkg.ES{}
+	client,_ := es.NewEsObj(esConfig)
 
-	client := pkg.NewEsObj(esConfig)
-	ctx := context.Background()
-	defer ctx.Done()
+	dao := dao.Dao{}
+	dao.NewDao(mysql.Open(synchronousConfig.Job.Content.Reader.Parameter.Connection.JdbcUrl))
+
+	bulk := service.Bulk{}
+	bulk.Init(synchronousConfig.Job.Content,dao ,es)
+
 	//Index当前状态
-	state, state_err := pkg.GetIndexStatus(ctx,
-		client,
-		synchronousConfig.Job.Content.Writer.Parameter.Index)
-
+	state, state_err := es.GetIndexStatus(synchronousConfig.Job.Content.Writer.Parameter.Index)
 	if state_err != nil {
 		c.JSON(200, gin.H{
 			"code":    errno.PushGetIndexStatus.Code,
 			"message": state_err.Error(),
 		})
-		panic(fmt.Errorf("[indexController-Push]:[%s]", state_err))
+		panic(any(fmt.Errorf("[indexController-Push]:[%s]", state_err)))
 		return
 	}
 
@@ -113,7 +112,7 @@ func Push(c *gin.Context) {
 		//1. 创建index_a
 
 		_, create_err := client.CreateIndex(synchronousConfig.Job.Content.Writer.Parameter.Index + "_a").
-			Body(synchronousConfig.Job.Content.Writer.Parameter.Dsl).Do(ctx)
+			Body(synchronousConfig.Job.Content.Writer.Parameter.Dsl).Do(es.Ctx)
 
 		if create_err != nil {
 			c.JSON(200, gin.H{
@@ -123,26 +122,27 @@ func Push(c *gin.Context) {
 			return
 		}
 
+
 		//2. 推送数据
-		db_error := push.BulkPushRun(esConfig,
-			synchronousConfig.Job.Content.Writer.Parameter.Index+"_a",
-			synchronousConfig.Job.Content,
-			synchronousConfig.Job.Setting.Speed.Channel,
-			name,
-		)
+
+		sections := dao.SelectMaxAndMin(synchronousConfig.Job.Content.Reader.Parameter.Connection.BoundarySql)
+		section := bulk.Generate(sections, synchronousConfig.Job.Setting.Speed.Channel)
+
+		db_error := bulk.Run(section, synchronousConfig.Job.Content.Writer.Parameter.Index+"_a")
+
 
 		if db_error != nil {
 			c.JSON(200, gin.H{
 				"code":    errno.PushError.Code,
 				"message": db_error.Error(),
 			})
-			client.DeleteIndex(synchronousConfig.Job.Content.Writer.Parameter.Index + "_a").Do(ctx)
+			client.DeleteIndex(synchronousConfig.Job.Content.Writer.Parameter.Index + "_a").Do(es.Ctx)
 			return
 		}
 		//3. 创建别名
 
 		client.Alias().Add(synchronousConfig.Job.Content.Writer.Parameter.Index+"_a",
-			synchronousConfig.Job.Content.Writer.Parameter.Index).Do(ctx)
+			synchronousConfig.Job.Content.Writer.Parameter.Index).Do(es.Ctx)
 
 		//非首次push
 	} else if state.PlanIndexA || state.PlanIndexB {
@@ -159,9 +159,10 @@ func Push(c *gin.Context) {
 			now_index_suffix = synchronousConfig.Job.Content.Writer.Parameter.Index + "_b"
 		}
 
+
 		//2. 创建索引 a || b
 		_, create_err := client.CreateIndex(new_index_suffix).
-			Body(synchronousConfig.Job.Content.Writer.Parameter.Dsl).Do(ctx)
+			Body(synchronousConfig.Job.Content.Writer.Parameter.Dsl).Do(es.Ctx)
 
 		if create_err != nil {
 			c.JSON(200, gin.H{
@@ -172,29 +173,28 @@ func Push(c *gin.Context) {
 		}
 
 		//3. 推送数据
-		db_error := push.BulkPushRun(esConfig,
-			new_index_suffix,
-			synchronousConfig.Job.Content,
-			synchronousConfig.Job.Setting.Speed.Channel,
-			name,
-		)
+
+		sections := dao.SelectMaxAndMin(synchronousConfig.Job.Content.Reader.Parameter.Connection.BoundarySql)
+		section := bulk.Generate(sections, synchronousConfig.Job.Setting.Speed.Channel)
+
+		db_error := bulk.Run(section, new_index_suffix)
 
 		if db_error != nil {
 			c.JSON(200, gin.H{
 				"code":    errno.PushError.Code,
 				"message": db_error.Error(),
 			})
-			client.DeleteIndex(new_index_suffix).Do(ctx)
+			client.DeleteIndex(new_index_suffix).Do(es.Ctx)
 			return
 		}
 
 		//4. 别名调换
 
 		client.Alias().Add(new_index_suffix,
-			synchronousConfig.Job.Content.Writer.Parameter.Index).Do(ctx)
+			synchronousConfig.Job.Content.Writer.Parameter.Index).Do(es.Ctx)
 
 		//5. 删除老index
-		client.DeleteIndex(now_index_suffix).Do(ctx)
+		client.DeleteIndex(now_index_suffix).Do(es.Ctx)
 	}
 
 	//6. 删除精度条信息回复响应
@@ -272,16 +272,5 @@ func Progress(c *gin.Context) {
 		}
 
 	}
-
-}
-
-func Restart(c *gin.Context) {
-
-	//todo 重新启动还要找其他的解决方法
-	str, _ := os.Getwd()
-	fmt.Println(str)
-	s := exec.Command("bash", "-c", "kill `lsof -t -i:9100` && "+str+"/main")
-	output, _ := s.CombinedOutput()
-	fmt.Println(string(output))
 
 }

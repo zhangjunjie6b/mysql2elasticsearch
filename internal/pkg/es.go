@@ -3,10 +3,9 @@ package pkg
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/olivere/elastic/v7"
-	"main/pkg/errno"
+	"main/internal/pkg/errno"
 	"strings"
 )
 
@@ -35,9 +34,19 @@ type IndexStatus struct {
 
 }
 
+type EsInterface interface {
+	NewEsObj(config EsConfig) (*elastic.Client, error)
+	GetIndexInfo(name string) (SettingsIndexInfo ,error)
+	GetIndexStatus(name string) (IndexStatus, error)
+}
+
+type ES struct {
+	Client *elastic.Client
+	Ctx context.Context
+}
 
 // map[creation_date:1610278432105 number_of_replicas:1 number_of_shards:1 provided_name:yandex uuid:J73-HO52Tjik7kbbEBvYDA version:map[created:7070199]]
-func NewEsObj(config EsConfig) *elastic.Client {
+func (e *ES) NewEsObj(config EsConfig) (*elastic.Client, error) {
 
 	client,err := elastic.NewClient(
 		elastic.SetURL(config.Addresses, config.Addresses) ,
@@ -46,24 +55,25 @@ func NewEsObj(config EsConfig) *elastic.Client {
 	)
 
 	if (err != nil) {
-		panic(fmt.Errorf("NewEsObj Error : %s", err))
+		return nil, fmt.Errorf("NewEsObj Error : %s", err)
 	}
-	return  client
+
+	e.Client = client
+	e.Ctx = context.Background()
+	return  e.Client, nil
 
 }
 
+func (e *ES) GetIndexInfo(name string) (SettingsIndexInfo ,error){
 
-func GetIndexInfo(ctx context.Context, client *elastic.Client, name string) SettingsIndexInfo {
-
-	info,err := client.IndexGet(name).Do(ctx)
+	info,err := e.Client.IndexGet(name).Do(e.Ctx)
 
 	if err != nil {
-		err = fmt.Errorf("[Index-%s]：[%s]", name, err)
-		panic(err)
+		return SettingsIndexInfo{}, fmt.Errorf("[Index-%s]：[%s]", name, err)
 	}
 
 	if len(info) > 1{
-		panic(fmt.Errorf("[Index-%s]:[%s]", name, errno.SysAliasExceedLimit))
+		return SettingsIndexInfo{}, fmt.Errorf("[Index-%s]:[%s]", name, errno.SysAliasExceedLimit)
 	}
 
 	for k,_ :=  range info {
@@ -75,17 +85,14 @@ func GetIndexInfo(ctx context.Context, client *elastic.Client, name string) Sett
 	index, _ := json.Marshal(&c)
 	m := SettingsIndexInfo{}
 	err = json.Unmarshal(index, &m)
-	m.AliaseName = info[name].Aliases
 
 	if (err != nil) {
-		panic(fmt.Errorf("[Index-%s]:[%s]" , name, errno.SysIndexGetInfoTransitionJsonError))
+		return SettingsIndexInfo{},fmt.Errorf("[Index-%s]:[%s]" , name, errno.SysIndexGetInfoTransitionJsonError)
 	}
+	m.AliaseName = info[name].Aliases
 
-	return m
+	return m,nil
 }
-
-
-
 
 /**
 	type IndexStatus struct {
@@ -96,29 +103,28 @@ func GetIndexInfo(ctx context.Context, client *elastic.Client, name string) Sett
 	}
 
 		IndexName 为空  				表示尚未场景索引，走首次推送流程
-		IndexName 有值 AliaseName 为空	表示有索引，但是非程序生成，报错
+		IndexName 有值 AliaseName 为空	表示有索引，但是非程序生成，返回空信息
 		IndexName 有值 AliaseName 有值   PlanIndexA&PlanIndexB 其中一个为true    表示非首次运行
 		PlanIndexA&PlanIndexB  为true   表示程序正在运行
 
  */
-func GetIndexStatus( ctx context.Context, client *elastic.Client, name string) (IndexStatus, error) {
+func (e *ES) GetIndexStatus(name string) (IndexStatus, error) {
 
 	var state =  IndexStatus{IndexName: name, AliaseName: "", PlanIndexA: false, PlanIndexB: false}
 
-	exist,_ := client.IndexExists(name).Do(ctx)
-	//20 65   45
+	exist,err := e.Client.IndexExists(name).Do(e.Ctx)
+
 	if !exist {
 		state.IndexName = ""
 		return state,nil
 	}
 
-	info := GetIndexInfo(ctx, client, name)
+	info,err := e.GetIndexInfo(name)
 
-	if len(info.AliaseName) > 1 {
-		//todo 别名暂时只支持自身维护，多别名场景尚未涉及
-		return  state, errors.New(errno.SysIndexAliasExceedLimit)
+	if err != nil {
+		//todo 多别名场景尚未涉及
+		return  state, err
 	}
-
 
 	state.IndexName = info.Provided_name
 
@@ -131,14 +137,9 @@ func GetIndexStatus( ctx context.Context, client *elastic.Client, name string) (
 	}
 
 
+
 	suffix := strings.Split(state.IndexName, "_")
-
-	if len(suffix) <= 1 {
-		return  state, errors.New(errno.SysIndexNameStandardLimit)
-	}
-
 	suffix_value := suffix[len(suffix)-1]
-
 
 	switch suffix_value {
 	case "a":

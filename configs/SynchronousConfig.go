@@ -3,7 +3,7 @@ package configs
 import (
 	"fmt"
 	"github.com/spf13/viper"
-	"main/pkg"
+	"main/internal/pkg"
 )
 
 type SynchronousConfig struct {
@@ -90,7 +90,7 @@ func NewSynchronousConfig(configName string)  SynchronousConfig {
 	err := config.ReadInConfig()
 
 	if err != nil {
-		panic(fmt.Errorf("Fatal error config file: %s \n", err))
+		panic(any(fmt.Errorf("Fatal error config file: %s \n", err)))
 	}
 	synchronousConfig := SynchronousConfig{}
 	config.Unmarshal(&synchronousConfig)
@@ -98,11 +98,9 @@ func NewSynchronousConfig(configName string)  SynchronousConfig {
 	return synchronousConfig
 }
 
-func GetMysqlConfig(job Job) string {
-	return job.Content.Reader.Parameter.Username + ":" + job.Content.Reader.Parameter.Password  + "@tcp(" + job.Content.Reader.Parameter.Host+ ")/" + job.Content.Reader.Parameter.DbName
-}
 
-func GetEsConfig(job Job)  pkg.EsConfig {
+
+func GetEsConfig(job Job) pkg.EsConfig {
 	return pkg.EsConfig{
 		Addresses:             job.Content.Writer.Parameter.Endpoint,
 		Username:              job.Content.Writer.Parameter.AccessId,

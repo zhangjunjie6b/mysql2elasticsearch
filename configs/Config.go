@@ -3,8 +3,8 @@ package configs
 import (
 	"fmt"
 	"github.com/spf13/viper"
-	"main/pkg"
-	"main/pkg/errno"
+	"main/internal/pkg"
+	"main/internal/pkg/errno"
 	"time"
 )
 
@@ -36,12 +36,11 @@ func NewConfig () Config{
 		time.Sleep( 5 * time.Second)
 
 		if errNumber >3 {
-			panic("配置文件检查出错")
+			panic(any("配置文件检查出错"))
 		}
 
 		goto Loop
 	}
-
 	configjson := Config{}
 	config.Unmarshal(&configjson)
 	return configjson

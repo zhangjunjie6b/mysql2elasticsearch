@@ -3,18 +3,19 @@ package parse
 import (
 	"fmt"
 	"main/configs"
-	"main/pkg/errno"
+	"main/internal/pkg/errno"
 	"strconv"
 )
 
 //https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-types.html
+//目前类型是一把梭的，需要再改指定类型
+
 type TypeMappingObj struct {
 	IsID bool
 	Mold string
 }
 
-
-func TypeMapping(column string, columnMapping []configs.Column) ( TypeMappingObj, error) {
+func TypeMapping(column string, columnMapping []configs.Column) (TypeMappingObj, error) {
 
 	var typeMapping = map[string]string{}
 
@@ -31,20 +32,25 @@ func TypeMapping(column string, columnMapping []configs.Column) ( TypeMappingObj
 
 			 isID := false
 
-			if column == "id" {
+			if v.Type == "id" {
 				isID = true
+			}
+
+			if typeMapping[v.Type] == "" {
+				return TypeMappingObj{}, fmt.Errorf("[%s]:%s", column, errno.SysTypeUndefined)
 			}
 
 			return TypeMappingObj{
 				IsID: isID,
 				Mold: typeMapping[v.Type],
 			}, nil
-			
+
 		}
 
 	}
-	//SysTypeUndefined
-	return TypeMappingObj{}, fmt.Errorf("[%s]:%s", column,errno.SysTypeUndefined)
+
+	return TypeMappingObj{}, fmt.Errorf("[%s]:%s", column, errno.SysTypeUndefined)
+
 }
 
 func StrConversion(types string, value string) (interface{}, error) {

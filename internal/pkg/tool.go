@@ -11,3 +11,12 @@ func CopyFile(dst string, src string)  {
 	dstfile,_ := os.Create(dst)
 	io.Copy(dstfile, srcfile)
 }
+
+func SliceIn(slice []string, val string) (int, bool) {
+	for i, item := range slice {
+		if item == val {
+			return i, true
+		}
+	}
+	return -1, false
+}
