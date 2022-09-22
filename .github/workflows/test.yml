@@ -4,22 +4,10 @@ on:
   push:
     branches:
       - master
-    paths:
-      - "**/*.go"
-      - "go.mod"
-      - "go.sum"
-      - "Makefile"
-      - ".github/workflows/test.yaml"
   pull_request:
     types: [opened, reopened, synchronize]
     branches:
       - master
-    paths:
-      - "**/*.go"
-      - "go.mod"
-      - "go.sum"
-      - "Makefile"
-      - ".github/workflows/test.yaml"
 
 
 env:
