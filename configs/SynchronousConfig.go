@@ -45,6 +45,7 @@ type Connection struct {
 	QuerySql string
 	JdbcUrl  string
 	BoundarySql   string
+	Increment string
 }
 //----- Reader ------
 

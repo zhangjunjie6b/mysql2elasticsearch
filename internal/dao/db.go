@@ -1,17 +1,35 @@
 package dao
 
 import (
+	"database/sql"
+	"github.com/Jeffail/gabs/v2"
 	_ "github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"gorm.io/gorm/schema"
 	"log"
+	"main/configs"
+	"main/internal/pkg/parse"
 	"os"
+	"strconv"
 	"time"
 )
 
 type Dao struct {
 	client *gorm.DB
 }
+
+type ResultJson struct {
+	JsonString string
+	FieldID FieldID
+}
+
+type FieldID struct {
+	Status bool
+	Key    string
+	Value  string
+}
+
 
 func (d *Dao) GetClient() (*gorm.DB) {
 	return d.client
@@ -31,6 +49,7 @@ func (d *Dao) NewDao(dialector gorm.Dialector) (error){
 	)
 
 	 client, err := gorm.Open(dialector, &gorm.Config{Logger: newLogger})
+	 schema.RegisterSerializer("json", JSONSerializer{})
 
 	 if err!= nil {
 	 	return err
@@ -48,4 +67,64 @@ func (d *Dao) SelectMaxAndMin(sql string) Section {
 	var section Section
 	d.client.Raw(sql).Scan(&section)
 	return section
+}
+
+
+func (d *Dao) ResultTostring(rows *sql.Rows, configColumn []configs.Column) ([]ResultJson,error) {
+
+	resultJson := []ResultJson{}
+	columns, err := rows.Columns()
+	if err != nil {
+		return resultJson,err
+	}
+
+	values := make([]sql.RawBytes, len(columns))
+	scanArgs := make([]interface{}, len(values))
+
+	for i := range values {
+		scanArgs[i] = &values[i]
+	}
+
+	for rows.Next() {
+		err = rows.Scan(scanArgs...)
+		if err != nil {
+			return resultJson, err
+		}
+
+		var value string
+		var isID FieldID
+
+		jsonObj := gabs.New()
+
+		for i, col := range values {
+			if col != nil {
+				value = string(col)
+			}
+
+			columnType, err := parse.TypeMapping(columns[i], configColumn)
+			if err != nil {
+				return resultJson, err
+			}
+
+			values, err := parse.StrConversion(columnType.Mold, value)
+			if err != nil {
+				return resultJson, err
+			}
+
+			jsonObj.Set(values, columns[i])
+
+			if columnType.IsID {
+				isID.Status = true
+				isID.Key, isID.Value = columns[i], strconv.Itoa(values.(int))
+			}
+		}
+
+		resultJson = append(resultJson,ResultJson{
+			JsonString: jsonObj.String(),
+			FieldID:   isID,
+		})
+
+	}
+
+	return resultJson, nil
 }

@@ -15,8 +15,9 @@
 vendor/
 
 /config/*.json
-
+/configs/*.json
 #MAC
 .DS_Store
 #IDE
 .idea
+
