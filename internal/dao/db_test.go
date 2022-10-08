@@ -42,6 +42,7 @@ func TestResultTostring(t *testing.T) {
 			AddRow(2, "测试2", 200, 200))
 
 
+
 	parameter := []configs.Column{
 		{Name: "id" , Type: "id"},
 		{Name: "keyword" , Type: "text"},
@@ -90,7 +91,42 @@ func TestResultTostring(t *testing.T) {
 
 }
 
+func TestJSONSerializer(t *testing.T) {
+	mock := newMockDatabase()
 
+	type Payloads struct {
+		Id   int    `json:"id"`
+		Type string `json:"type"`
+		EsIndexName string `json:"name"`
+	}
+
+	type Jobs struct {
+		ID uint `gorm:"primaryKey"`
+		Payload   Payloads `gorm:"serializer:json"`
+	}
+
+	mock.ExpectQuery("SELECT * FROM `jobs` ORDER BY `jobs`.`id` LIMIT 1").
+		WillReturnRows(sqlmock.NewRows(
+			[]string{"id", "payload"}).
+			AddRow(2, `{"id": 41768,"type":"update","name":"t1"}`))
+
+	job := Jobs{}
+	d.GetClient().First(&job)
+	assert.Equal(t, int(job.ID), 2)
+	assert.Equal(t, job.Payload.EsIndexName, "t1")
+
+
+	mock.ExpectBegin()
+	mock.ExpectExec("UPDATE `jobs` SET `payload`=? WHERE `id` = ?").
+		WillReturnResult(sqlmock.NewResult(2, 1))
+	mock.ExpectCommit()
+	job.Payload.Id = 111
+	result := d.GetClient().Save(&job)
+
+	assert.NoError(t, result.Error)
+	assert.Equal(t, result.RowsAffected,1)
+
+}
 
 func newMockDatabase() (sqlmock.Sqlmock) {
 
@@ -103,7 +139,14 @@ func newMockDatabase() (sqlmock.Sqlmock) {
 	}
 
 
-	dialector := mysql.New(mysql.Config{
+	dialector := mysql.Open("127.0.0.1:3306")
+	err = d.NewDao(dialector)
+
+	if err == nil {
+		panic(any("error new dialector"))
+	}
+
+	dialector = mysql.New(mysql.Config{
 		Conn: sqlDB,
 		DriverName: "mysql",
 		SkipInitializeWithVersion: true,
