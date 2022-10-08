@@ -124,7 +124,7 @@ func TestJSONSerializer(t *testing.T) {
 	result := d.GetClient().Save(&job)
 
 	assert.NoError(t, result.Error)
-	assert.Equal(t, result.RowsAffected,1)
+	assert.Equal(t, int(result.RowsAffected),1)
 
 }
 
