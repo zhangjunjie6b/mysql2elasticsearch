@@ -9,13 +9,14 @@ require github.com/gin-gonic/gin v1.7.1
 require github.com/go-sql-driver/mysql v1.6.0
 
 require (
+	bou.ke/monkey v1.0.2
+	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/olivere/elastic/v7 v7.0.24
 	gorm.io/driver/mysql v1.3.6
 	gorm.io/gorm v1.23.9
 )
 
 require (
-	github.com/DATA-DOG/go-sqlmock v1.5.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.4.7 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect

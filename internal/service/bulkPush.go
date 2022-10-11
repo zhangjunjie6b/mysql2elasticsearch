@@ -89,7 +89,7 @@ func (b *Bulk) workProcess (section dao.Section, indexname string) error {
 		}
 
 		//获取数据值和类型
-		//start := time.Now()
+		start := time.Now()
 		sqlQuery := strings.Replace(b.config.Reader.Parameter.Connection.QuerySql, "?", strconv.Itoa(i), 1)
 		sqlQuery = strings.Replace(sqlQuery, "?", strconv.Itoa(temp), 1)
 
@@ -112,8 +112,8 @@ func (b *Bulk) workProcess (section dao.Section, indexname string) error {
 			}
 		}
 
-		//cost := time.Since(start)
-		//fmt.Printf("[%d -%d] cost=[%s] \n", i, temp, cost)
+		cost := time.Since(start)
+		fmt.Printf("[%d -%d] cost=[%s] \n", i, temp, cost)
 
 
 		columns, error := rows.Columns()
