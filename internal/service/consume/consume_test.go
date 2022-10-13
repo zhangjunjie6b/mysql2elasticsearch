@@ -14,7 +14,7 @@ import (
 
 var d dao.Dao
 
-func TestDo(t *testing.T) {
+func TestConsumeQueue_Do(t *testing.T) {
 	queue := ConsumeQueue{}
 	config := configs.SynchronousConfig{}
 	queue.Do(config)
@@ -47,7 +47,7 @@ func (c TConsume) Handle(data interface{}) error{
 	return nil
 }
 
-func TestRun(t *testing.T) {
+func TestConsumeQueue_Run(t *testing.T) {
 	queue := ConsumeQueue{}
 	mock := newMockDatabase()
 	sql := "SELECT * FROM `push_jobs` WHERE queue = ? AND del = '0' AND attempts <= 6 ORDER BY `push_jobs`.`id` LIMIT 100"

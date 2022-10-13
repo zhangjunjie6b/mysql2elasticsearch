@@ -15,7 +15,9 @@ import (
 	"time"
 )
 
-
+var(
+	ErrNoConfigFile = errors.New("config file read error")
+)
 
 type Increment struct {
 	dbObj map[string] dbObj
@@ -58,16 +60,16 @@ func (c *Increment) getConfigInstance(jobname string) (configs.SynchronousConfig
 		return synchronousConfig, esconfig, true
 	} else {
 		c.esConfig[jobname], c.synchronousConfig[jobname], ok = configs.JobNameGetESConfig(jobname)
-
 		if ok == false {
+			delete(c.esConfig, jobname)
+			delete(c.synchronousConfig, jobname)
 			return configs.SynchronousConfig{}, pkg.EsConfig{},false
 		}
-
 		return c.synchronousConfig[jobname], c.esConfig[jobname], true
 	}
 }
 
-func (c *Increment) getDBInstance (jobname string) (dbObj,error) {
+func (c *Increment) getDBInstance (jobname string) (dbObj, error) {
 	value, ok :=  c.dbObj[jobname]
 	db := dbObj{}
 
@@ -78,7 +80,7 @@ func (c *Increment) getDBInstance (jobname string) (dbObj,error) {
 		synchronousConfig,_,ok := c.getConfigInstance(jobname)
 
 		if ok == false {
-			return db, errors.New("配置文件读取异常")
+			return db, ErrNoConfigFile
 		}
 
 		dao := dao.Dao{}
@@ -109,7 +111,7 @@ func (c *Increment) getEsInstance (jobname string) (pkg.ES,error) {
 		_,esConfig,ok := c.getConfigInstance(jobname)
 
 		if ok == false {
-			return es, errors.New("配置文件读取异常")
+			return es, ErrNoConfigFile
 		}
 
 		_,err := es.NewEsObj(esConfig)
@@ -123,7 +125,7 @@ func (c *Increment) getEsInstance (jobname string) (pkg.ES,error) {
 	}
 }
 
-func (c *Increment) update (data mode.Jobs) error {
+func (c *Increment)update(data mode.Jobs) error {
 
 	db,err := c.getDBInstance(data.Payload.EsIndexName)
 	if err != nil  {
@@ -160,14 +162,14 @@ func (c *Increment) update (data mode.Jobs) error {
 	doc,err:= db.dao.ResultTostring(rows,
 		c.synchronousConfig[data.Payload.EsIndexName].Job.Content.Writer.Parameter.Column)
 
-	if len(doc) < 1 {
-		return errors.New("doc is null")
-	}
-
 	if err != nil  {
 		return err
 	}
 
+
+	if len(doc) < 1 {
+		return errors.New("doc is null")
+	}
 
 	if doc[0].FieldID.Status {
 
@@ -210,4 +212,3 @@ func (c *Increment) del (data mode.Jobs) error {
 	}
 	return nil
 }
-

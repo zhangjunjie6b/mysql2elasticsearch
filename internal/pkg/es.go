@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/olivere/elastic/v7"
+	"github.com/pkg/errors"
 	"main/internal/pkg/errno"
 	"strings"
 )
@@ -55,7 +56,7 @@ func (e *ES) NewEsObj(config EsConfig) (*elastic.Client, error) {
 	)
 
 	if (err != nil) {
-		return nil, fmt.Errorf("NewEsObj Error : %s", err)
+		return nil, errors.Wrap(err, "NewEsObj Error")
 	}
 
 	e.Client = client

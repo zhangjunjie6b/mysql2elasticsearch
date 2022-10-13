@@ -14,7 +14,7 @@ import (
 var d Dao
 
 
-func TestSelectMaxAndMin(t *testing.T) {
+func TestDao_SelectMaxAndMin(t *testing.T) {
 
 	mock := newMockDatabase()
 	mock.ExpectQuery("SELECT max(id) as max ,min(id) as min FROM t").
@@ -26,12 +26,12 @@ func TestSelectMaxAndMin(t *testing.T) {
 	assert.Equal(t, c.Min, 1)
 }
 
-func TestGetClient(t *testing.T) {
+func TestDao_GetClient(t *testing.T) {
 	c := d.GetClient()
 	assert.NotNil(t, c)
 }
 
-func TestResultTostring(t *testing.T) {
+func TestDao_ResultTostring(t *testing.T) {
 
 
 	mock := newMockDatabase()
@@ -91,7 +91,7 @@ func TestResultTostring(t *testing.T) {
 
 }
 
-func TestJSONSerializer(t *testing.T) {
+func TestJSONSerializer_Scan_Value(t *testing.T) {
 	mock := newMockDatabase()
 
 	type Payloads struct {
@@ -117,6 +117,7 @@ func TestJSONSerializer(t *testing.T) {
 
 
 	mock.ExpectBegin()
+	//todo 这里有错空了改
 	mock.ExpectExec("UPDATE `jobs` SET `payload`=? WHERE `id` = ?").
 		WillReturnResult(sqlmock.NewResult(2, 1))
 	mock.ExpectCommit()
