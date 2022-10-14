@@ -5,16 +5,10 @@ coverage:
         target: 84%
         threshold: 0%
         flags:
-          - unit
+          - "project unit"
     patch:
       default:
-          # basic
           target:  84%
           threshold: 0%
-          # advanced
-          branches:
-            - master
-          if_ci_failed: error
-          only_pulls: false
           flags:
-            - "unit"
+            - "patch unit"
