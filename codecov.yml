@@ -1,23 +1,20 @@
 coverage:
   status:
     project:
-        default:
-        # basic
+      default:
         target: 84%
-        threshold: 1%
-        base: auto 
-        flags: 
+        threshold: 0%
+        flags:
           - unit
     patch:
       default:
-        # basic
-        target:  84%
-        threshold: 1%
-        base: auto 
-        # advanced
-        branches: 
-          - master
-        if_ci_failed: error #success, error
-        only_pulls: false
-        flags: 
-          - "unit"
+          # basic
+          target:  84%
+          threshold: 0%
+          # advanced
+          branches:
+            - master
+          if_ci_failed: error
+          only_pulls: false
+          flags:
+            - "unit"
