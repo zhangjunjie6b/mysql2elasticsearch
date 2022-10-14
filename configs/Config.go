@@ -3,8 +3,8 @@ package configs
 import (
 	"fmt"
 	"github.com/spf13/viper"
-	"main/internal/pkg"
-	"main/internal/pkg/errno"
+	"github.com/zhangjunjie6b/mysql2elasticsearch/internal/pkg"
+	"github.com/zhangjunjie6b/mysql2elasticsearch/internal/pkg/errno"
 	"time"
 )
 

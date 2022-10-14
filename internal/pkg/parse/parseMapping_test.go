@@ -2,7 +2,7 @@ package parse
 
 import (
 	"github.com/stretchr/testify/assert"
-	"main/configs"
+	"github.com/zhangjunjie6b/mysql2elasticsearch/configs"
 	"testing"
 )
 
