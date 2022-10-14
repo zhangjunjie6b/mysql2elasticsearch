@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"gorm.io/driver/mysql"
-	"log"
 	"github.com/zhangjunjie6b/mysql2elasticsearch/configs"
 	"github.com/zhangjunjie6b/mysql2elasticsearch/internal/dao"
 	"github.com/zhangjunjie6b/mysql2elasticsearch/internal/pkg"
 	"github.com/zhangjunjie6b/mysql2elasticsearch/internal/pkg/errno"
 	"github.com/zhangjunjie6b/mysql2elasticsearch/internal/pkg/monitor"
 	"github.com/zhangjunjie6b/mysql2elasticsearch/internal/service"
+	"gorm.io/driver/mysql"
+	"log"
 	"net/http"
 	"time"
 )
@@ -27,14 +27,14 @@ func Index(c *gin.Context) {
 		esCofig := configs.GetEsConfig(NewSynchronousConfig.Job)
 
 		es := pkg.ES{}
-		client,_ := es.NewEsObj(esCofig)
+		client, _ := es.NewEsObj(esCofig)
 
 		exists, _ := client.IndexExists(NewSynchronousConfig.Job.Content.Writer.Parameter.Index).Do(es.Ctx)
 
 		indexInfo := pkg.SettingsIndexInfo{Uuid: "未创建", Number_of_replicas: "0", Number_of_shards: "0"}
 
 		if exists {
-			indexInfo,_ = es.GetIndexInfo(NewSynchronousConfig.Job.Content.Writer.Parameter.Index)
+			indexInfo, _ = es.GetIndexInfo(NewSynchronousConfig.Job.Content.Writer.Parameter.Index)
 		}
 
 		job = append(job, map[string]string{
@@ -78,13 +78,13 @@ func Push(c *gin.Context) {
 		return
 	}
 	es := pkg.ES{}
-	client,_ := es.NewEsObj(esConfig)
+	client, _ := es.NewEsObj(esConfig)
 
 	dao := dao.Dao{}
 	dao.NewDao(mysql.Open(synchronousConfig.Job.Content.Reader.Parameter.Connection.JdbcUrl))
 
 	bulk := service.Bulk{}
-	bulk.Init(synchronousConfig.Job.Content,dao ,es)
+	bulk.Init(synchronousConfig.Job.Content, dao, es)
 
 	//Index当前状态
 	state, state_err := es.GetIndexStatus(synchronousConfig.Job.Content.Writer.Parameter.Index)
@@ -122,14 +122,12 @@ func Push(c *gin.Context) {
 			return
 		}
 
-
 		//2. 推送数据
 
 		sections := dao.SelectMaxAndMin(synchronousConfig.Job.Content.Reader.Parameter.Connection.BoundarySql)
 		section := bulk.Generate(sections, synchronousConfig.Job.Setting.Speed.Channel)
 
 		db_error := bulk.Run(section, synchronousConfig.Job.Content.Writer.Parameter.Index+"_a")
-
 
 		if db_error != nil {
 			c.JSON(200, gin.H{
@@ -158,7 +156,6 @@ func Push(c *gin.Context) {
 			new_index_suffix = synchronousConfig.Job.Content.Writer.Parameter.Index + "_a"
 			now_index_suffix = synchronousConfig.Job.Content.Writer.Parameter.Index + "_b"
 		}
-
 
 		//2. 创建索引 a || b
 		_, create_err := client.CreateIndex(new_index_suffix).

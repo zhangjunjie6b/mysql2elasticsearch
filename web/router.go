@@ -5,7 +5,7 @@ import (
 	"github.com/zhangjunjie6b/mysql2elasticsearch/web/controllers"
 )
 
-func Start() *gin.Engine{
+func Start() *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 	r.Static("/bootstrap-4.6.0-dist", "../../web/public/bootstrap-4.6.0-dist/")

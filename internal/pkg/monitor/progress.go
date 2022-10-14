@@ -2,17 +2,17 @@ package monitor
 
 import "sync"
 
-var ProgressBars  = map[string]*ProgressBar{}
+var ProgressBars = map[string]*ProgressBar{}
 
 type ProgressBar struct {
-	Total int
+	Total    int
 	Progress int
-	M sync.Mutex
+	M        sync.Mutex
 }
 
 type ProgressBarJson struct {
-	Name string
-	Total int
+	Name     string
+	Total    int
 	Progress int
-	Status int  // 101 运行中  200 执行完成
+	Status   int // 101 运行中  200 执行完成
 }
