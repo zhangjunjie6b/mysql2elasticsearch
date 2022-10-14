@@ -5,10 +5,14 @@ coverage:
         target: 84%
         threshold: 0%
         flags:
-          - "project unit"
+          - "project-unit"
+        paths:
+          - "./"
     patch:
       default:
           target:  84%
           threshold: 0%
           flags:
-            - "patch unit"
+            - "patch-unit"
+          paths:
+            - "./"
