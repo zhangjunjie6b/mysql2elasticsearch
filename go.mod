@@ -1,4 +1,4 @@
-module main
+module github.com/zhangjunjie6b/mysql2elasticsearch
 
 go 1.18
 
