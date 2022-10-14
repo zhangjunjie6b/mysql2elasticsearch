@@ -1,18 +1,20 @@
 coverage:
+  round: down
+  precision: 5
   status:
     project:
       default:
-        target: 84%
+        target: 85%
         threshold: 0%
         flags:
-          - "project-unit"
+          - "unit"
         paths:
-          - "./"
+          - "/"
     patch:
       default:
-          target:  84%
+          target:  85%
           threshold: 0%
           flags:
-            - "patch-unit"
+            - "unit"
           paths:
-            - "./"
+            - "/"

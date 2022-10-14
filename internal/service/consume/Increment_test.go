@@ -283,7 +283,113 @@ func TestIncrement_GetEsInstance(t *testing.T) {
 
 }
 
+func TestIncrement_Update(t *testing.T) {
+	increment := &Increment{}
+	increment.Init()
 
+	//mock
+	handler := http.NotFound
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handler(w, r)
+	}))
+	defer ts.Close()
+
+	//test NewEsObj
+	handler = mockRouteHandler([]mockHander{
+		{
+			Resp: `{ "names" : "a709c7505efe", "cluster_name" : "docker-cluster", "cluster_uuid" : "8DC8kaEsQ_ClkJtB3OHy9Q", "version" : { "number" : "7.7.1", "build_flavor" : "default", "build_type" : "docker", "build_hash" : "ad56dce891c901a492bb1ee393f12dfff473a423", "build_date" : "2020-05-28T16:30:01.040088Z", "build_snapshot" : false, "lucene_version" : "8.5.1", "minimum_wire_compatibility_version" : "6.8.0", "minimum_index_compatibility_version" : "6.0.0-beta1" }, "tagline" : "You Know, for Search"}`,
+			Path: "/",
+			Method: []string {"GET", "HEAD"},
+			HttpCode: 200,
+		},
+		{
+			Resp: `{"_shards":{"total":0,"successful":0,"failed":0},"_index":"test","_type":"_doc","_id":"1","_version":7,"result":"noop"}`,
+			Path: "/update1-succeed/_update/28866",
+			Method: []string {"POST", "HEAD"},
+			HttpCode: 200,
+		},
+		{
+			Resp: `{"status":400}`,
+			Path: "/update3-fail/_update/288669",
+			Method: []string {"POST", "HEAD"},
+			HttpCode: 400,
+		},
+	})
+	mock := newMockData()
+
+	convey.Convey("TestIncrement_Update", t, func() {
+
+		tt := []struct{
+			name string
+			db dbObj
+			rows *sqlmock.Rows
+			esConfig pkg.EsConfig
+			data mode.Jobs
+			Column []configs.Column
+			expectError interface{}
+		}{
+			{"update1-succeed", dbObj{sql: "select where id = ?", dao: D},
+			sqlmock.NewRows([]string{"id","title","keyword"}).
+						AddRow(1, "测试1", "测试1"),
+				   pkg.EsConfig{Addresses: ts.URL},
+			  mode.Jobs{Payload:mode.Payloads{Id:28866, EsIndexName: "update1-succeed"}},
+		  []configs.Column{{Name: "id", Type: "id"}, {Name: "title", Type: "keyword"}, {Name: "keyword", Type: "keyword"}},
+		  		nil,
+			},
+			{"update2-fail", dbObj{sql: "select where id = ?", dao: D},
+				sqlmock.NewRows([]string{"id","title","keyword"}),
+					pkg.EsConfig{Addresses: ts.URL},
+				mode.Jobs{},
+				[]configs.Column{},
+				errors.New("doc is null"),
+			},
+			{"update3-fail", dbObj{sql: "select where id = ?", dao: D},
+				sqlmock.NewRows([]string{"id","title","keyword"}).
+					AddRow(1, "测试1", "测试1"),
+				pkg.EsConfig{Addresses: ts.URL},
+				mode.Jobs{Payload:mode.Payloads{Id:288669, EsIndexName: "update3-fail"}},
+				[]configs.Column{{Name: "id", Type: "id"}, {Name: "title", Type: "keyword"}, {Name: "keyword", Type: "keyword"}},
+				&elastic.Error{Status: 400, Details: nil},
+			},
+		}//ErrorDetails
+
+		for _,v := range tt {
+
+			mock.ExpectQuery(v.db.sql).WillReturnRows(v.rows)
+
+
+			db := gomonkey.ApplyPrivateMethod(increment, "getDBInstance", func(jobname string) (dbObj, error) {
+				return v.db, nil
+			})
+
+
+			defer db.Reset()
+
+			es := gomonkey.ApplyPrivateMethod(reflect.TypeOf(increment), "getConfigInstance",
+				func(name string) (configs.SynchronousConfig, pkg.EsConfig, bool){
+					return configs.SynchronousConfig{}, v.esConfig, true
+				})
+
+			defer es.Reset()
+
+			syn := configs.SynchronousConfig{Job: configs.Job{Content: configs.Content{Writer: configs.Writer{Parameter: configs.WriterParameter{Column: v.Column}}}}}
+			increment.synchronousConfig[v.name] = syn
+
+			convey.Convey(v.name, func() {
+				error := increment.update(v.data)
+				convey.So(error, convey.ShouldResemble, v.expectError)
+			})
+
+		}
+
+
+
+
+	})
+
+
+
+}
 
 func TestIncrement_Del(t *testing.T)  {
 	increment := &Increment{}
