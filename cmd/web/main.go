@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/zhangjunjie6b/mysql2elasticsearch/configs"
+	"github.com/zhangjunjie6b/mysql2elasticsearch/internal/dao"
+	"github.com/zhangjunjie6b/mysql2elasticsearch/internal/service/consume"
+	"github.com/zhangjunjie6b/mysql2elasticsearch/web"
 	"gorm.io/driver/mysql"
-	"main/configs"
-	"main/internal/dao"
-	"main/internal/service/consume"
-	"main/web"
 	"strconv"
 )
 

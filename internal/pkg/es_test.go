@@ -3,7 +3,7 @@ package pkg
 import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
-	"main/internal/pkg/errno"
+	"github.com/zhangjunjie6b/mysql2elasticsearch/internal/pkg/errno"
 	"net/http"
 	"net/http/httptest"
 	"testing"

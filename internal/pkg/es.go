@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/olivere/elastic/v7"
 	"github.com/pkg/errors"
-	"main/internal/pkg/errno"
+	"github.com/zhangjunjie6b/mysql2elasticsearch/internal/pkg/errno"
 	"strings"
 )
 

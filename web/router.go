@@ -2,7 +2,7 @@ package web
 
 import (
 	"github.com/gin-gonic/gin"
-	"main/web/controllers"
+	"github.com/zhangjunjie6b/mysql2elasticsearch/web/controllers"
 )
 
 func Start() *gin.Engine{

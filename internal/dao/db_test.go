@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/mysql"
 	"log"
-	"main/configs"
-	"main/internal/pkg/errno"
+	"github.com/zhangjunjie6b/mysql2elasticsearch/configs"
+	"github.com/zhangjunjie6b/mysql2elasticsearch/internal/pkg/errno"
 	"testing"
 )
 

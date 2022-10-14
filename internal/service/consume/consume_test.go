@@ -6,9 +6,9 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"gorm.io/driver/mysql"
 	"log"
-	"main/configs"
-	"main/internal/dao"
-	"main/internal/mode"
+	"github.com/zhangjunjie6b/mysql2elasticsearch/configs"
+	"github.com/zhangjunjie6b/mysql2elasticsearch/internal/dao"
+	"github.com/zhangjunjie6b/mysql2elasticsearch/internal/mode"
 	"testing"
 )
 
