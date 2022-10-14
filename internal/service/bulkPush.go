@@ -17,15 +17,14 @@ import (
 	"time"
 )
 
-
 type Bulk struct {
 	bulkPushRunWg sync.WaitGroup
-	dao dao.Dao
-	es pkg.ES
-	config configs.Content
+	dao           dao.Dao
+	es            pkg.ES
+	config        configs.Content
 }
 
-func (b *Bulk) Init (conn configs.Content, d dao.Dao, es pkg.ES) error {
+func (b *Bulk) Init(conn configs.Content, d dao.Dao, es pkg.ES) error {
 	b.config = conn
 	b.dao = d
 	b.es = es
@@ -33,14 +32,14 @@ func (b *Bulk) Init (conn configs.Content, d dao.Dao, es pkg.ES) error {
 	return nil
 }
 
-func (b *Bulk) Run (channelData map[int]dao.Section, indexname string) error {
+func (b *Bulk) Run(channelData map[int]dao.Section, indexname string) error {
 
 	channelWorkNumbers := (channelData[len(channelData)].Max - channelData[1].Min) / b.config.Writer.Parameter.BatchSize
 	monitor.ProgressBars[b.config.Writer.Parameter.Index] = &monitor.ProgressBar{Total: channelWorkNumbers, Progress: 0}
 
 	for _, v := range channelData {
-		 b.bulkPushRunWg.Add(1)
-		 go b.workProcess(v, indexname)
+		b.bulkPushRunWg.Add(1)
+		go b.workProcess(v, indexname)
 	}
 
 	b.bulkPushRunWg.Wait()
@@ -48,10 +47,7 @@ func (b *Bulk) Run (channelData map[int]dao.Section, indexname string) error {
 	return nil
 }
 
-
-
-
-func (b *Bulk) workProcess (section dao.Section, indexname string) error {
+func (b *Bulk) workProcess(section dao.Section, indexname string) error {
 
 	client := b.es.Client
 	var p *elastic.BulkProcessor
@@ -61,7 +57,7 @@ func (b *Bulk) workProcess (section dao.Section, indexname string) error {
 	for true {
 		p, error = client.BulkProcessor().Name("MyBackgroundWorker-1").
 			Workers(2).
-			BulkActions( b.config.Writer.Parameter.BatchSize).
+			BulkActions(b.config.Writer.Parameter.BatchSize).
 			BulkSize(2 << 20). //2MB
 			FlushInterval(30 * time.Second).
 			Do(context.Background())
@@ -98,7 +94,7 @@ func (b *Bulk) workProcess (section dao.Section, indexname string) error {
 
 		for true {
 
-			rows,error = b.dao.GetClient().Raw(sqlQuery).Rows()
+			rows, error = b.dao.GetClient().Raw(sqlQuery).Rows()
 
 			if error != nil {
 				if timesCount > 10 {
@@ -114,7 +110,6 @@ func (b *Bulk) workProcess (section dao.Section, indexname string) error {
 
 		cost := time.Since(start)
 		fmt.Printf("[%d -%d] cost=[%s] \n", i, temp, cost)
-
 
 		columns, error := rows.Columns()
 		if error != nil {
@@ -144,7 +139,6 @@ func (b *Bulk) workProcess (section dao.Section, indexname string) error {
 			}{}
 
 			jsonObj := gabs.New()
-
 
 			for i, col := range values {
 				if col != nil {
@@ -191,10 +185,10 @@ func (b *Bulk) workProcess (section dao.Section, indexname string) error {
 	return nil
 }
 
-func (b *Bulk) Generate (section dao.Section, chanNumber int) map[int]dao.Section {
+func (b *Bulk) Generate(section dao.Section, chanNumber int) map[int]dao.Section {
 
 	channelPip := make(map[int]dao.Section)
-	extent := ((section.Max - section.Min) / chanNumber) +1
+	extent := ((section.Max - section.Min) / chanNumber) + 1
 
 	for i := 1; i <= chanNumber; i++ {
 		channelPip[i] = dao.Section{section.Min, section.Min + extent}
@@ -204,5 +198,3 @@ func (b *Bulk) Generate (section dao.Section, chanNumber int) map[int]dao.Sectio
 	return channelPip
 
 }
-
-

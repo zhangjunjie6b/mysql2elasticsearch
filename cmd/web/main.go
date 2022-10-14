@@ -15,10 +15,9 @@ func main() {
 	r := web.Start()
 	config := configs.NewConfig()
 
-
-	for _,v := range config.JobList {
+	for _, v := range config.JobList {
 		qu := consume.ConsumeQueue{}
-		synchronous,ok := configs.JobNameGetSynchronousConfig(v.Name)
+		synchronous, ok := configs.JobNameGetSynchronousConfig(v.Name)
 
 		if ok {
 			dao := dao.Dao{}
@@ -34,15 +33,12 @@ func main() {
 		}
 	}
 
-
-
 	fmt.Printf("web GUI start: http://ip:%d \n", config.Port)
 
 	err := r.Run(":" + strconv.Itoa(config.Port))
 
-	if (err != nil) {
+	if err != nil {
 		panic(any(fmt.Errorf("http run error:%s \n", err)))
 	}
 
-	
 }

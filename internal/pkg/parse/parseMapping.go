@@ -19,18 +19,18 @@ func TypeMapping(column string, columnMapping []configs.Column) (TypeMappingObj,
 
 	var typeMapping = map[string]string{}
 
-	typeMapping["id"]   =  "int32"
+	typeMapping["id"] = "int32"
 	typeMapping["integer"] = "int32"
 	typeMapping["text"] = "string"
 	typeMapping["date"] = "string"
 	typeMapping["keyword"] = "string"
 	typeMapping["long"] = "int32"
 
-	for _,v := range columnMapping {
+	for _, v := range columnMapping {
 
-		if (v.Name == column) {
+		if v.Name == column {
 
-			 isID := false
+			isID := false
 
 			if v.Type == "id" {
 				isID = true
@@ -56,14 +56,14 @@ func TypeMapping(column string, columnMapping []configs.Column) (TypeMappingObj,
 func StrConversion(types string, value string) (interface{}, error) {
 
 	switch types {
-		case "int32":
-			v,_ := strconv.Atoi(value)
-			return  v , nil
-		case "long":
-			v,_ := strconv.Atoi(value)
-			return  v , nil
-		case "string":
-			return  value , nil
+	case "int32":
+		v, _ := strconv.Atoi(value)
+		return v, nil
+	case "long":
+		v, _ := strconv.Atoi(value)
+		return v, nil
+	case "string":
+		return value, nil
 	}
 
 	return "", fmt.Errorf("[%s]:%s", value, errno.SysTypeUndefined)

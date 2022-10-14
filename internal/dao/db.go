@@ -4,12 +4,12 @@ import (
 	"database/sql"
 	"github.com/Jeffail/gabs/v2"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/zhangjunjie6b/mysql2elasticsearch/configs"
+	"github.com/zhangjunjie6b/mysql2elasticsearch/internal/pkg/parse"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
 	"log"
-	"github.com/zhangjunjie6b/mysql2elasticsearch/configs"
-	"github.com/zhangjunjie6b/mysql2elasticsearch/internal/pkg/parse"
 	"os"
 	"strconv"
 	"time"
@@ -21,7 +21,7 @@ type Dao struct {
 
 type ResultJson struct {
 	JsonString string
-	FieldID FieldID
+	FieldID    FieldID
 }
 
 type FieldID struct {
@@ -30,32 +30,30 @@ type FieldID struct {
 	Value  string
 }
 
-
-func (d *Dao) GetClient() (*gorm.DB) {
+func (d *Dao) GetClient() *gorm.DB {
 	return d.client
 }
 
-func (d *Dao) NewDao(dialector gorm.Dialector) (error){
-
+func (d *Dao) NewDao(dialector gorm.Dialector) error {
 
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags),
 		logger.Config{
-			SlowThreshold: time.Second,   // 慢 SQL 阈值
-			LogLevel:      logger.Error, // 日志级别
-			IgnoreRecordNotFoundError: true,   // 忽略ErrRecordNotFound（记录未找到）错误
-			Colorful:      false,         // 禁用彩色打印
+			SlowThreshold:             time.Second,  // 慢 SQL 阈值
+			LogLevel:                  logger.Error, // 日志级别
+			IgnoreRecordNotFoundError: true,         // 忽略ErrRecordNotFound（记录未找到）错误
+			Colorful:                  false,        // 禁用彩色打印
 		},
 	)
 
-	 client, err := gorm.Open(dialector, &gorm.Config{Logger: newLogger})
-	 schema.RegisterSerializer("json", JSONSerializer{})
+	client, err := gorm.Open(dialector, &gorm.Config{Logger: newLogger})
+	schema.RegisterSerializer("json", JSONSerializer{})
 
-	 if err!= nil {
-	 	return err
-	 }
-	 d.client = client
-	 return  nil
+	if err != nil {
+		return err
+	}
+	d.client = client
+	return nil
 }
 
 type Section struct {
@@ -69,13 +67,12 @@ func (d *Dao) SelectMaxAndMin(sql string) Section {
 	return section
 }
 
-
-func (d *Dao) ResultTostring(rows *sql.Rows, configColumn []configs.Column) ([]ResultJson,error) {
+func (d *Dao) ResultTostring(rows *sql.Rows, configColumn []configs.Column) ([]ResultJson, error) {
 
 	resultJson := []ResultJson{}
 	columns, err := rows.Columns()
 	if err != nil {
-		return resultJson,err
+		return resultJson, err
 	}
 
 	values := make([]sql.RawBytes, len(columns))
@@ -119,9 +116,9 @@ func (d *Dao) ResultTostring(rows *sql.Rows, configColumn []configs.Column) ([]R
 			}
 		}
 
-		resultJson = append(resultJson,ResultJson{
+		resultJson = append(resultJson, ResultJson{
 			JsonString: jsonObj.String(),
-			FieldID:   isID,
+			FieldID:    isID,
 		})
 
 	}
