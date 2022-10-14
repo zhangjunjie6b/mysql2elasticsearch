@@ -2,7 +2,7 @@
 [![codecov](https://codecov.io/gh/zhangjunjie6b/mysql2elasticsearch/branch/master/graph/badge.svg?token=9NMC85CNUO)](https://codecov.io/gh/zhangjunjie6b/mysql2elasticsearch)
 [![Test and coverage](https://github.com/zhangjunjie6b/mysql2elasticsearch/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/zhangjunjie6b/mysql2elasticsearch/actions/workflows/test.yml)
 [![GitHub go.mod Go version (subdirectory of monorepo)](https://img.shields.io/github/go-mod/go-version/zhangjunjie6b/mysql2elasticsearch)](https://github.com/zhangjunjie6b/mysql2elasticsearch/blob/main/go.mod)
-
+[![Go Report Card](https://goreportcard.com/badge/github.com/zhangjunjie6b/mysql2elasticsearch)](https://goreportcard.com/report/github.com/zhangjunjie6b/mysql2elasticsearch)
 
  虽然 logstash dts 等工具提供了很好的多数据源同步订阅方案，但是实际项目中并不会把服务器的上机权限或云厂商账号开放给所有成员。
  这个小工具算对这类场景的一种补充,它可以帮助我们从mysql中取出数据并推送到elasticsearch上
