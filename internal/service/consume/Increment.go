@@ -191,7 +191,7 @@ func (c *Increment) update(data mode.Jobs) error {
 		}
 
 	} else {
-		errors.New("FieldID is null")
+		return errors.New("FieldID is null")
 	}
 
 	return nil
