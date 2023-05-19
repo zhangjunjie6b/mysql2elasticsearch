@@ -25,6 +25,7 @@ func TypeMapping(column string, columnMapping []configs.Column) (TypeMappingObj,
 	typeMapping["date"] = "string"
 	typeMapping["keyword"] = "string"
 	typeMapping["long"] = "int32"
+	typeMapping["vector"] = "vector"
 
 	for _, v := range columnMapping {
 
@@ -64,6 +65,8 @@ func StrConversion(types string, value string) (interface{}, error) {
 		return v, nil
 	case "string":
 		return value, nil
+	case "vector":
+		return "[" + value + "]", nil
 	}
 
 	return "", fmt.Errorf("[%s]:%s", value, errno.SysTypeUndefined)

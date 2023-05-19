@@ -157,7 +157,17 @@ func (b *Bulk) workProcess(section dao.Section, indexname string) error {
 					panic(any(error))
 				}
 
-				jsonObj.Set(values, columns[i])
+				if columnType.Mold == "vector" {
+
+					jsonObjParsed, err := gabs.ParseJSON([]byte(values.(string)))
+					if err != nil {
+						fmt.Println("Error parsing JSON:", err)
+					}
+					jsonObj.Set(jsonObjParsed.Data(), columns[i])
+
+				} else {
+					jsonObj.Set(values, columns[i])
+				}
 
 				if columnType.IsID {
 					isID.status = true
