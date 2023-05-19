@@ -56,7 +56,7 @@ func TestBulk(t *testing.T) {
 
 	b.config.Reader.Parameter.Connection.BoundarySql = "SELECT min(id) as min,max(id) as max FROM t"
 	b.config.Writer.Parameter.BatchSize = 10
-	b.config.Reader.Parameter.Connection.QuerySql = "SELECT id,title,keyword FROM t where id >= ? and id <= ?"
+	b.config.Reader.Parameter.Connection.QuerySql = "SELECT id,title,keyword,vector FROM t where id >= ? and id <= ?"
 	b.config.Writer.Parameter.Column = []configs.Column{
 		{Name: "id", Type: "id"},
 		{Name: "title", Type: "text"},
@@ -92,9 +92,9 @@ func TestBulk(t *testing.T) {
 			strconv.Itoa(maxid)
 		expectSql := mysqlmock.ExpectQuery(sql)
 		id := i
-		rows := sqlmock.NewRows([]string{"id", "title", "keyword"})
+		rows := sqlmock.NewRows([]string{"id", "title", "keyword", "vector"})
 		for ; id <= i+b.config.Writer.Parameter.BatchSize; id++ {
-			rows.AddRow(id, "title"+strconv.Itoa(id), "keyword"+strconv.Itoa(id))
+			rows.AddRow(id, "title"+strconv.Itoa(id), "keyword"+strconv.Itoa(id), "[1,2,3]")
 		}
 		expectSql.WillReturnRows(rows)
 	}
