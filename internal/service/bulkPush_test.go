@@ -61,6 +61,7 @@ func TestBulk(t *testing.T) {
 		{Name: "id", Type: "id"},
 		{Name: "title", Type: "text"},
 		{Name: "keyword", Type: "text"},
+		{Name: "vector", Type: "vector"},
 	}
 
 	mysqlmock.ExpectQuery("SELECT min(id) as min,max(id) as max FROM t").
@@ -87,7 +88,7 @@ func TestBulk(t *testing.T) {
 		if maxid > expected[1].Max {
 			maxid = expected[1].Max
 		}
-		sql := "SELECT id,title,keyword FROM t where id >= " + strconv.Itoa(i) + " and id <= " +
+		sql := "SELECT id,title,keyword,vector FROM t where id >= " + strconv.Itoa(i) + " and id <= " +
 			strconv.Itoa(maxid)
 		expectSql := mysqlmock.ExpectQuery(sql)
 		id := i
