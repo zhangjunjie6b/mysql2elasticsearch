@@ -161,7 +161,16 @@ func (b *Bulk) workProcess(section dao.Section, indexname string) error {
 
 					jsonObjParsed, err := gabs.ParseJSON([]byte(values.(string)))
 					if err != nil {
+
 						fmt.Println("Error parsing JSON:", err)
+						//为项目组指定修改
+						//向量搜索会出现 0,解析失败的情况
+						//把string中的0.替换成00000
+						values = strings.Replace(values.(string), "0.", "0.00000", -1)
+						jsonObjParsed, err = gabs.ParseJSON([]byte(values.(string)))
+						if err != nil {
+							fmt.Println("Error parsing JSON retry:", err)
+						}
 					}
 					jsonObj.Set(jsonObjParsed.Data(), columns[i])
 
