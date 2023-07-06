@@ -187,10 +187,19 @@ func (b *Bulk) workProcess(section dao.Section, indexname string) error {
 
 			var r *elastic.BulkIndexRequest
 
-			if isID.status {
-				r = elastic.NewBulkIndexRequest().Index(indexname).Type("_doc").Id(isID.value).Doc(jsonObj.String())
+			//在ES8.x中废弃了_type，所以在8.x版本中不需要指定type
+			if b.config.Writer.Parameter.VersionGreaterThan8 == true {
+				if isID.status {
+					r = elastic.NewBulkIndexRequest().Index(indexname).Id(isID.value).Doc(jsonObj.String())
+				} else {
+					r = elastic.NewBulkIndexRequest().Index(indexname).Doc(jsonObj.String())
+				}
 			} else {
-				r = elastic.NewBulkIndexRequest().Index(indexname).Type("_doc").Doc(jsonObj.String())
+				if isID.status {
+					r = elastic.NewBulkIndexRequest().Index(indexname).Type("_doc").Id(isID.value).Doc(jsonObj.String())
+				} else {
+					r = elastic.NewBulkIndexRequest().Index(indexname).Type("_doc").Doc(jsonObj.String())
+				}
 			}
 
 			p.Add(r)

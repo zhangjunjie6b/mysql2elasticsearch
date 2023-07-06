@@ -57,15 +57,16 @@ type Writer struct {
 }
 
 type WriterParameter struct {
-	Endpoint  string
-	AccessId  string
-	AccessKey string
-	Index     string
-	Types     string
-	BatchSize int
-	Splitter  string
-	Column    []Column
-	Dsl       string
+	Endpoint            string
+	AccessId            string
+	AccessKey           string
+	Index               string
+	Types               string
+	BatchSize           int
+	Splitter            string
+	Column              []Column
+	Dsl                 string
+	VersionGreaterThan8 bool `json:"versionGreaterThan8"`
 }
 
 type Column struct {
