@@ -161,7 +161,16 @@ func (b *Bulk) workProcess(section dao.Section, indexname string) error {
 
 					jsonObjParsed, err := gabs.ParseJSON([]byte(values.(string)))
 					if err != nil {
+
 						fmt.Println("Error parsing JSON:", err)
+						//为项目组指定修改
+						//向量搜索会出现 0,解析失败的情况
+						//把string中的0.替换成00000
+						values = strings.Replace(values.(string), "0.", "0.00000", -1)
+						jsonObjParsed, err = gabs.ParseJSON([]byte(values.(string)))
+						if err != nil {
+							fmt.Println("Error parsing JSON retry:", err)
+						}
 					}
 					jsonObj.Set(jsonObjParsed.Data(), columns[i])
 
@@ -178,10 +187,19 @@ func (b *Bulk) workProcess(section dao.Section, indexname string) error {
 
 			var r *elastic.BulkIndexRequest
 
-			if isID.status {
-				r = elastic.NewBulkIndexRequest().Index(indexname).Type("_doc").Id(isID.value).Doc(jsonObj.String())
+			//在ES8.x中废弃了_type，所以在8.x版本中不需要指定type
+			if b.config.Writer.Parameter.VersionGreaterThan8 == true {
+				if isID.status {
+					r = elastic.NewBulkIndexRequest().Index(indexname).Id(isID.value).Doc(jsonObj.String())
+				} else {
+					r = elastic.NewBulkIndexRequest().Index(indexname).Doc(jsonObj.String())
+				}
 			} else {
-				r = elastic.NewBulkIndexRequest().Index(indexname).Type("_doc").Doc(jsonObj.String())
+				if isID.status {
+					r = elastic.NewBulkIndexRequest().Index(indexname).Type("_doc").Id(isID.value).Doc(jsonObj.String())
+				} else {
+					r = elastic.NewBulkIndexRequest().Index(indexname).Type("_doc").Doc(jsonObj.String())
+				}
 			}
 
 			p.Add(r)
