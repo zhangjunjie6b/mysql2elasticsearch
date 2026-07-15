@@ -1,6 +1,6 @@
 module github.com/zhangjunjie6b/mysql2elasticsearch
 
-go 1.18
+go 1.25.0
 
 require github.com/spf13/viper v1.7.1
 
@@ -56,9 +56,9 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	golang.org/x/arch v0.3.0 // indirect
-	golang.org/x/crypto v0.17.0 // indirect
-	golang.org/x/net v0.17.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/crypto v0.52.0 // indirect
+	golang.org/x/net v0.54.0 // indirect
+	golang.org/x/text v0.37.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/ini.v1 v1.51.0 // indirect
 	gopkg.in/yaml.v2 v2.2.8 // indirect
@@ -69,5 +69,5 @@ require (
 	github.com/Jeffail/gabs/v2 v2.6.1
 	github.com/gorilla/websocket v1.4.2
 	github.com/stretchr/testify v1.8.3
-	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
 )
